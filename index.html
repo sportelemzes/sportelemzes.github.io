@@ -1,20 +1,22 @@
 <!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SportElemzés – friss cikkek</title>
-  <link rel="stylesheet" href="assets/style.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%2300a6ff'/%3E%3Cpath d='M18 34l10 8 18-20' stroke='%23fff' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SportElemzés</title>
+  <meta name="description" content="Elemzések, adatok, eredmények – naponta frissítve">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
 </head>
 <body>
 
 <header class="header-hero">
   <nav class="hero-nav">
-    <a class="brand" href="/"><span>🏟️</span> <span>SportElemzés</span></a>
+    <a class="brand" href="/"><span>SportElemzés</span></a>
     <div class="links">
       <a href="/">Elemzések</a>
       <a href="/stats.html">Statisztika</a>
+      <!-- Az Admin linket dinamikusan injektáljuk a token alapjan -->
     </div>
   </nav>
 
@@ -27,84 +29,65 @@
 <main>
   <section>
     <h2>Friss elemzések</h2>
-    <div id="feed" class="post-list"></div>
+    <div id="posts" class="card-list"></div>
   </section>
 </main>
 
 <footer>
-  © <span id="y"></span> SportElemzés • GitHub Pages
+  <small>© 2025 <strong>SportElemzés</strong> • <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a></small>
 </footer>
 
 <script>
-  // év a láblécben
-  document.getElementById('y').textContent = new Date().getFullYear();
+// ------- Admin link injektálása csak token esetén -------
+(function () {
+  var hasToken = !!localStorage.getItem('gh_token');
+  if (!hasToken) return;
+  var links = document.querySelector('.hero-nav .links');
+  if (!links) return;
+  var a = document.createElement('a');
+  a.href = '/admin/';
+  a.textContent = 'Admin';
+  a.rel = 'nofollow';
+  links.appendChild(a);
+})();
 
-  // egyszerű util a dátum formázásra
-  const fmtDate = iso => {
-    if (!iso) return '';
-    const d = new Date(iso);
-    if (isNaN(d)) return iso;
-    const p = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}.`;
-  };
-
-  // Cikkek betöltése védetten
-  async function loadPosts() {
-    const box = document.getElementById('feed');
-    box.innerHTML = '<div class="muted">Cikkek betöltése…</div>';
-
-    try {
-      // cache bust: ha tegnap létrehoztad a JSON-t, a CDN még cache-elheti
-      const res = await fetch('posts/index.json?ts=' + Date.now(), { cache: 'no-store' });
-
-      if (!res.ok) {
-        box.innerHTML = '<div class="muted">Még nincs közzétett cikk (vagy a posts/index.json nem található).</div>';
-        return;
-      }
-
-      let list = [];
-      try {
-        list = await res.json();
-      } catch (e) {
-        box.innerHTML = '<div class="muted">Hibás JSON a posts/index.json fájlban.</div>';
-        return;
-      }
-
-      if (!Array.isArray(list) || list.length === 0) {
-        box.innerHTML = '<div class="muted">Még nincs közzétett cikk.</div>';
-        return;
-      }
-
-      // Dátum szerint csökkenő
-      list.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-
-      const html = list.map(post => {
-        const title   = post.title || 'Cím nélkül';
-        const slug    = post.slug  || '#';
-        const date    = fmtDate(post.date);
-        const league  = post.league || '';
-        const excerpt = post.excerpt || '';
-
-        return `
-          <article class="card">
-            <h3><a href="posts/${slug}.html">${title}</a></h3>
-            <div class="muted">${date}${league ? ' • ' + league : ''}</div>
-            <p class="summary">${excerpt}</p>
-            <p><a href="posts/${slug}.html">Tovább →</a></p>
-          </article>
-        `;
-      }).join('');
-
-      box.innerHTML = html;
-
-    } catch (err) {
-      console.error(err);
-      document.getElementById('feed').innerHTML =
-        '<div class="muted">Nem sikerült betölteni a cikkeket.</div>';
+// ------- Posztok listázása -------
+async function loadPosts() {
+  const box = document.getElementById('posts');
+  try {
+    const r = await fetch('/posts/index.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const arr = await r.json();
+    if (!Array.isArray(arr) || arr.length === 0) {
+      box.innerHTML = '<p>Még nincs közzétett elemzés.</p>';
+      return;
     }
-  }
+    const fmt = (iso) => {
+      try {
+        return new Date(iso).toLocaleDateString('hu-HU', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        });
+      } catch (e) {
+        return iso;
+      }
+    };
 
-  loadPosts();
+    box.innerHTML = arr.map(p => `
+      <a class="card" href="/posts/${p.slug}.html">
+        <div class="summary">
+          <h3>${p.title}</h3>
+          <div class="meta">${fmt(p.date)} • ${p.league || ''}</div>
+          <p>${(p.excerpt || '').replace(/<[^>]+>/g,'')}</p>
+          <span class="more">Tovább →</span>
+        </div>
+      </a>
+    `).join('');
+  } catch (e) {
+    box.innerHTML = '<p>Nem sikerült betölteni az elemzéseket.</p>';
+    console.error(e);
+  }
+}
+loadPosts();
 </script>
 </body>
 </html>
