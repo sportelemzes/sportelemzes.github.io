@@ -1,24 +1,91 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SportElemzés – Elemzések</title>
 
-<header class="header-hero">
-  <nav class="hero-nav">
-    <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
-    <div class="links">
-      <a href="/">Elemzések</a>
-      <a href="/stats.html">Statisztika</a>
+  <!-- (opcionális) Favicon -->
+  <link rel="icon" href="/assets/favicon.ico">
+
+  <!-- A fő stílus (abszolút útvonal, hogy biztosan betöltődjön) -->
+  <link rel="stylesheet" href="/assets/style.css?v=4" />
+</head>
+<body>
+
+  <!-- HERO + MENÜ -->
+  <header class="header-hero">
+    <nav class="hero-nav">
+      <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
+      <div class="links">
+        <a href="/">Elemzések</a>
+        <a href="/stats.html">Statisztika</a>
+      </div>
+    </nav>
+
+    <div class="hero-inner">
+      <h1>SportElemzés</h1>
+      <p>Elemzések, adatok, eredmények – naponta frissítve</p>
     </div>
-  </nav>
+  </header>
 
-  <div class="hero-inner">
-    <h1>SportElemzés</h1>
-    <p>Elemzések, adatok, eredmények – naponta frissítve</p>
-  </div>
-</header>
-<script>
-  (function(){
-    const path = location.pathname.replace(/\/$/, '') || '/';
-    document.querySelectorAll('.hero-nav .links a').forEach(a=>{
-      const href = a.getAttribute('href').replace(/\/$/, '') || '/';
-      if (href === path) a.classList.add('active');
-    });
-  })();
-</script>
+  <!-- TARTALOM -->
+  <main class="container" style="max-width:960px;margin:0 auto;padding:20px;">
+    <h2 style="margin:8px 0 12px;">Friss elemzések</h2>
+    <div id="posts"></div>
+  </main>
+
+  <!-- Aktív menü kiemelése -->
+  <script>
+    (function () {
+      const path = location.pathname.replace(/\/$/, '') || '/';
+      document.querySelectorAll('.hero-nav .links a').forEach(a => {
+        const href = a.getAttribute('href').replace(/\/$/, '') || '/';
+        if (href === path) a.classList.add('active');
+      });
+    })();
+  </script>
+
+  <!-- Posztlista betöltése a posts/index.json alapján -->
+  <script>
+    (function () {
+      const wrap = document.getElementById('posts');
+
+      function card(p) {
+        return `
+          <article class="post-card" style="padding:16px;border:1px solid #eee;border-radius:12px;margin:12px 0;">
+            <h3 style="margin:0 0 6px;font-size:20px;">
+              <a href="/posts/${p.slug}.html">${p.title}</a>
+            </h3>
+            <div class="meta" style="color:#666;font-size:14px;">
+              ${p.date || ''} ${p.league ? ' • ' + p.league : (p.sport ? ' • ' + p.sport : '')}
+            </div>
+            <p>${p.excerpt || ''}</p>
+            <p><a href="/posts/${p.slug}.html">Tovább →</a></p>
+          </article>
+        `;
+      }
+
+      fetch('/posts/index.json?_=' + Date.now())
+        .then(r => {
+          if (!r.ok) throw new Error('posts/index.json nem érhető el');
+          return r.json();
+        })
+        .then(items => {
+          if (!Array.isArray(items) || !items.length) {
+            wrap.innerHTML = '<p>Még nincs közzétett elemzés.</p>';
+            return;
+          }
+          // újabb poszt felül
+          items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+          wrap.innerHTML = items.map(card).join('');
+        })
+        .catch(err => {
+          console.error(err);
+          wrap.innerHTML = '<p>Nem sikerült betölteni a posztlistát.</p>';
+        });
+    })();
+  </script>
+
+</body>
+</html>
