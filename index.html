@@ -1,53 +1,15 @@
-<!doctype html>
-<html lang="hu">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SportElemzés – Elemzések</title>
-  <link rel="icon" href="./assets/favicon.ico">
-  <link rel="stylesheet" href="./assets/style.css">
-  <style>
-    .nav { display:flex; gap:1rem; align-items:center; padding:12px 16px; border-bottom:1px solid #eee; }
-    .nav a { text-decoration:none; font-weight:600; }
-    .container { max-width:960px; margin:0 auto; padding:20px; }
-    .post-card { padding:16px; border:1px solid #eee; border-radius:12px; margin:12px 0; }
-    .post-card h2 { margin:0 0 6px 0; font-size:20px; }
-    .meta { color:#666; font-size:14px; }
-  </style>
-</head>
-<body>
-  <header class="nav">
-    <a href="/" aria-label="Főoldal">🏠 Elemzések</a>
-    <a href="/stats.html">📈 Statisztika</a>
-  </header>
 
-  <main class="container">
-    <h1>Friss elemzések</h1>
-    <div id="posts"></div>
-  </main>
+<header class="header-hero">
+  <nav class="hero-nav">
+    <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
+    <div class="links">
+      <a href="/">Elemzések</a>
+      <a href="/stats.html">Statisztika</a>
+    </div>
+  </nav>
 
-  <script>
-    // Egyszerű lista a posts/index.json alapján
-    fetch('/posts/index.json?_=' + Date.now())
-      .then(r => r.json())
-      .then(items => {
-        const wrap = document.getElementById('posts');
-        if (!Array.isArray(items) || !items.length) {
-          wrap.innerHTML = '<p>Még nincs közzétett elemzés.</p>';
-          return;
-        }
-        wrap.innerHTML = items.map(p => `
-          <article class="post-card">
-            <h2><a href="/posts/${p.slug}.html">${p.title}</a></h2>
-            <div class="meta">${p.date} • ${p.league || p.sport || ''}</div>
-            <p>${p.excerpt}</p>
-            <p><a href="/posts/${p.slug}.html">Tovább →</a></p>
-          </article>
-        `).join('');
-      })
-      .catch(() => {
-        document.getElementById('posts').innerHTML = '<p>Nem érhető el a posztlista.</p>';
-      });
-  </script>
-</body>
-</html>
+  <div class="hero-inner">
+    <h1>SportElemzés</h1>
+    <p>Elemzések, adatok, eredmények – naponta frissítve</p>
+  </div>
+</header>
