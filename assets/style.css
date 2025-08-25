@@ -136,3 +136,60 @@ footer a{color:#8ac}
     padding: 6px 10px;
   }
 }
+/* --- HERO NAV (menü) erősebb vizuál + active állapot --- */
+.hero-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: #dff1ff;
+  background: rgba(10, 23, 35, .45);
+  border: 1px solid rgba(110, 185, 255, .2);
+  text-decoration: none;
+  transition: .2s ease;
+  backdrop-filter: blur(6px);
+}
+
+.hero-nav a:hover {
+  color: #001321;
+  background: #25c2ff;
+  border-color: #25c2ff;
+  box-shadow: 0 4px 14px rgba(37, 194, 255, .35);
+}
+
+.hero-nav a.active,
+.hero-nav a[aria-current="page"] {
+  color: #001321;
+  background: #1ee2b7;            /* aktív: türkiz */
+  border-color: #1ee2b7;
+  box-shadow: 0 6px 20px rgba(30, 226, 183, .35);
+}
+
+/* --- Tipp “kártyák” (Fő tipp / Alternatíva) --- */
+.tip-card {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid #2dd4bf;
+  background: rgba(45, 212, 191, .07);
+  border-radius: 14px;
+}
+.tip-card .title {
+  font-size: .94rem;
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: .6px;
+  color: #2dd4bf;
+  margin-bottom: .35rem;
+}
+
+/* csak a FŐ tipp legyen még kontrasztosabb */
+.tip-card.main {
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, .09);
+}
+.tip-card.main .title {
+  color: #22d3ee;
+}
