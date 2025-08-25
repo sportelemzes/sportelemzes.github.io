@@ -1,41 +1,82 @@
 <!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Newcastle vs Liverpool – elemzés és tipp</title>
-  <link rel="icon" href="../assets/favicon.ico">
-  <link rel="stylesheet" href="../assets/style.css">
-  <style>
-    .nav{display:flex;gap:1rem;align-items:center;padding:12px 16px;border-bottom:1px solid #eee;}
-    .container{max-width:860px;margin:0 auto;padding:20px;}
-    .meta{color:#666;margin-bottom:12px}
-    .tip{background:#f7fbff;border:1px solid #e2f1ff;padding:14px;border-radius:12px;margin:18px 0;}
-    .tip strong{font-size:16px}
-  </style>
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="stylesheet" href="/assets/style.css?v=4">
 </head>
 <body>
-<header class="nav">
-  <a href="/">🏠 Elemzések</a>
-  <a href="/stats.html">📈 Statisztika</a>
-</header>
 
-<main class="container">
-  <h1>Newcastle vs Liverpool – elemzés és tipp</h1>
-  <div class="meta">EPL • 2025-08-25 19:00 (UTC)</div>
+  <!-- Ugyanaz a hero + menü, mint a főoldalon -->
+  <header class="header-hero">
+    <nav class="hero-nav">
+      <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
+      <div class="links">
+        <a href="/">Elemzések</a>
+        <a href="/stats.html">Statisztika</a>
+      </div>
+    </nav>
 
-  <p><strong>Forma:</strong> rövid szöveg a formáról…</p>
-  <p><strong>Taktika:</strong> rövid szöveg a várható játékról…</p>
-  <p><strong>Hiányzók:</strong> rövid felsorolás…</p>
+    <div class="hero-inner">
+      <h1>Newcastle vs Liverpool – elemzés és tipp</h1>
+      <p>Premier League • 2025-08-25</p>
+    </div>
+  </header>
 
-  <div class="tip">
-    <strong>Tipp:</strong> Liverpool (away) – <em>H2H</em><br>
-    Javasolt tét: 1 000 egység • Odds: 2.10
-  </div>
+  <main class="container" style="max-width:900px;margin:0 auto;padding:20px;">
+    <article class="post-card" style="background:#121212;">
+      <p class="meta" style="margin:0 0 8px;color:#9aa0a6;">2025-08-25 • EPL</p>
 
-  <p>Indoklás: 3–5 mondat, miért ez a választás.</p>
+      <h2 style="margin-top:0">Összefoglaló</h2>
+      <p>
+        A címvédő Liverpool támadásban továbbra is magas minőségű átmeneteket hoz, míg a Newcastle-nél a centerhelyzet
+        (Isak hiánya/rotáció) bizonytalanságot okozhat a befejezésekben. A piacok is inkább a vendégek felé húznak.
+      </p>
 
-  <p><a href="/">← Vissza az elemzésekhez</a></p>
-</main>
+      <h3>Taktikai fókusz</h3>
+      <ul>
+        <li><strong>Magas pressz vs build-up:</strong> Newcastle letámad, de a Pool átmenetei (Salah + belső 8-asok) könnyen üthetnek térben.</li>
+        <li><strong>Rögzített helyzetek:</strong> Van Dijk jelenléte miatt a Liverpool szögletei veszélyesek.</li>
+        <li><strong>Mentális faktor:</strong> a hazaiak csatárkérdése némi zavar, a vendégek oldalán nagyobb stabilitás.</li>
+      </ul>
+
+      <h3>Mit mutatnak az árak?</h3>
+      <p>
+        A legtöbb könyvnél a Liverpool az enyhe favorit (DNB/Asian 0.0 ~1.55–1.65; Over 2.5 erős favorit).
+        Ezek a sávok a várható gólkülönbséget és a játék képét is alátámasztják.
+      </p>
+
+      <div class="post-card" style="margin-top:14px;border:1px dashed #333;background:#101010">
+        <h3 style="margin-top:0">Fő tipp</h3>
+        <p><strong>Liverpool DNB (Asian 0.0)</strong> • <em>odds-sáv: ~1.55–1.65</em></p>
+        <p style="margin:6px 0 0">Indoklás: a vendégek átmenetei és rögzített szituációi egyenletesebben hoznak minőségi helyzeteket.
+        A DNB védi a döntetlent (tét vissza), így konzervatív, de értelmes választás.</p>
+      </div>
+
+      <div class="post-card" style="margin-top:12px;border:1px dashed #333;background:#101010">
+        <h3 style="margin-top:0">Alternatíva</h3>
+        <p><strong>Liverpool csapatgólok Over 1.5</strong> • <em>odds-sáv: ~1.65–1.80</em></p>
+        <p style="margin:6px 0 0">Indoklás: gólgazdag meccskép, a Pool befejezései 90 percre nézve 2 gól környékét valószínűsítik.</p>
+      </div>
+
+      <p class="muted" style="margin-top:16px">
+        Tétkezelés javaslat: 1–1.5 u a fő tippre, 0.5–1 u az alternatívára (1 u = roll 1–2%).<br>
+        Felelős játék: mindig csak akkora tétet vállalj, amekkorát megengedhetsz magadnak.
+      </p>
+    </article>
+  </main>
+
+  <script>
+    // Aktív menü kiemelése
+    (function () {
+      const path = location.pathname.replace(/\/$/, '') || '/';
+      document.querySelectorAll('.hero-nav .links a').forEach(a => {
+        const href = a.getAttribute('href').replace(/\/$/, '') || '/';
+        if (href === path) a.classList.add('active');
+      });
+    })();
+  </script>
 </body>
 </html>
