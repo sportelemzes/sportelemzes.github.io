@@ -13,3 +13,12 @@
     <p>Elemzések, adatok, eredmények – naponta frissítve</p>
   </div>
 </header>
+<script>
+  (function(){
+    const path = location.pathname.replace(/\/$/, '') || '/';
+    document.querySelectorAll('.hero-nav .links a').forEach(a=>{
+      const href = a.getAttribute('href').replace(/\/$/, '') || '/';
+      if (href === path) a.classList.add('active');
+    });
+  })();
+</script>
