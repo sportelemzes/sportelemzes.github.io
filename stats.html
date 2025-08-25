@@ -4,58 +4,217 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SportElemzés – Statisztika</title>
-  <link rel="icon" href="./assets/favicon.ico">
-  <link rel="stylesheet" href="./assets/style.css">
-  <style>
-    .nav { display:flex; gap:1rem; align-items:center; padding:12px 16px; border-bottom:1px solid #eee; }
-    .container { max-width:1100px; margin:0 auto; padding:20px; }
-    .grid { display:grid; grid-template-columns:1fr; gap:20px; }
-    @media (min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
-    canvas { width:100%; height:360px; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { padding:8px 10px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
-    th { background:#fafafa; }
-  </style>
+
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="stylesheet" href="/assets/style.css?v=4">
 </head>
 <body>
-  <header class="nav">
-    <a href="/">🏠 Elemzések</a>
-    <a href="/stats.html">📈 Statisztika</a>
+
+  <!-- HERO + MENÜ (ugyanaz, mint az indexen) -->
+  <header class="header-hero">
+    <nav class="hero-nav">
+      <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
+      <div class="links">
+        <a href="/">Elemzések</a>
+        <a href="/stats.html">Statisztika</a>
+      </div>
+    </nav>
+
+    <div class="hero-inner">
+      <h1>Statisztika</h1>
+      <p>Havi P/L, tippek és eredmények</p>
+    </div>
   </header>
 
-  <main class="container">
-    <h1>Havi P/L és tippek</h1>
+  <main class="container" style="padding-top:20px;">
+    <h2>Havi P/L és tippek</h2>
 
-    <section class="grid">
-      <div>
-        <h2>Havi profit/loss</h2>
-        <canvas id="plChart"></canvas>
-        <div id="plEmpty" style="display:none; color:#666;">Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.</div>
-      </div>
+    <div class="grid">
+      <!-- Bal oldalt: grafikon -->
+      <section>
+        <h3>Havi profit/loss</h3>
+        <canvas id="plChart" height="180"></canvas>
+        <p id="noDataNote" class="muted" style="margin-top:14px;display:none;">
+          Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.
+        </p>
+      </section>
 
-      <div>
-        <h2>Tippek</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Dátum</th>
-              <th>Meccs</th>
-              <th>Piac</th>
-              <th>Tipp</th>
-              <th>Odds</th>
-              <th>Tét</th>
-              <th>Eredmény</th>
-              <th>Profit</th>
-            </tr>
-          </thead>
-          <tbody id="picksTable"></tbody>
-        </table>
-      </div>
-    </section>
+      <!-- Jobb oldalt: tábla -->
+      <section>
+        <h3>Tippek</h3>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Dátum</th>
+                <th>Meccs</th>
+                <th>Piac</th>
+                <th>Tipp</th>
+                <th>Odds</th>
+                <th>Tét</th>
+                <th>Eredmény</th>
+                <th>Profit</th>
+              </tr>
+            </thead>
+            <tbody id="picksBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <!-- ha a main.js Chart.js-t használ, töltsük be CDN-ről -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/assets/main.js"></script>
+  <!-- Aktív menü kiemelése -->
+  <script>
+    (function(){
+      const path = location.pathname.replace(/\/$/, '') || '/';
+      document.querySelectorAll('.hero-nav .links a').forEach(a=>{
+        const href = a.getAttribute('href').replace(/\/$/, '') || '/';
+        if (href === path) a.classList.add('active');
+      });
+    })();
+  </script>
+
+  <!-- Chart.js (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Adatbetöltés / táblázat + havi P/L -->
+  <script>
+    (async function () {
+      const HU = (n) => n.toLocaleString('hu-HU');
+      const picksUrl = '/data/picks.json?_=' + Date.now();
+
+      const tbody = document.getElementById('picksBody');
+      const noDataNote = document.getElementById('noDataNote');
+
+      let picks = [];
+      try {
+        const r = await fetch(picksUrl);
+        if (!r.ok) throw new Error('picks.json nem érhető el');
+        picks = await r.json();
+      } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="8">Nem sikerült betölteni a tippeket.</td></tr>';
+        return;
+      }
+
+      // --- tábla feltöltés ---
+      const fmtDate = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth()+1).padStart(2,'0');
+        const day = String(d.getUTCDate()).padStart(2,'0');
+        return `${y}. ${m}. ${day}.`;
+      };
+
+      const selText = (p) => {
+        if (p.market && p.market.toLowerCase().includes('total') && p.line != null) {
+          // totals esetén: over/under + line
+          return `${(p.selection||'').toUpperCase()} ${p.line}`;
+        }
+        return (p.selection || '').toUpperCase();
+      };
+
+      // időrendben legújabb felül
+      picks.sort((a,b)=> new Date(b.commence_time||0) - new Date(a.commence_time||0));
+
+      const rows = picks.map(p => {
+        const date = fmtDate(p.commence_time);
+        const match = p.eventId || p.id || '';
+        const market = (p.market || '').toUpperCase();
+        const tip = selText(p);
+        const odds = p.odds != null ? Number(p.odds).toFixed(2) : '';
+        const stake = p.stake != null ? HU(p.stake) : '';
+        const res = (p.status || '').toLowerCase(); // 'win' | 'lose' | 'void' | 'open'
+        let profit = '';
+
+        if (res === 'win') profit = HU(((p.odds - 1) * p.stake) || 0);
+        else if (res === 'lose') profit = HU(-(p.stake || 0));
+        else if (res === 'void') profit = '0';
+
+        return `
+          <tr>
+            <td>${date}</td>
+            <td>${match}</td>
+            <td>${market}</td>
+            <td>${tip}</td>
+            <td>${odds}</td>
+            <td>${stake}</td>
+            <td>${res || 'open'}</td>
+            <td>${profit}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rows || '<tr><td colspan="8">Nincs adat.</td></tr>';
+
+      // --- havi P/L (csak lezárt tippek) ---
+      const closed = picks.filter(p => ['win','lose','void'].includes((p.status||'').toLowerCase()));
+      if (!closed.length) {
+        noDataNote.style.display = 'block';
+        // üres chart is lehet, de itt inkább kihagyjuk
+        return;
+      }
+
+      const byMonth = new Map(); // 'YYYY-MM' -> net profit
+      for (const p of closed) {
+        const d = new Date(p.commence_time || Date.now());
+        const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
+
+        let pr = 0;
+        const s = (p.status||'').toLowerCase();
+        if (s === 'win') pr = (p.odds - 1) * p.stake;
+        else if (s === 'lose') pr = -p.stake;
+        else if (s === 'void') pr = 0;
+
+        byMonth.set(key, (byMonth.get(key)||0) + (pr||0));
+      }
+
+      // kronológiai sorrend
+      const labels = Array.from(byMonth.keys()).sort();
+      const monthly = labels.map(k => byMonth.get(k));
+      const cumul = monthly.reduce((acc, v, i) => {
+        acc.push((acc[i-1] || 0) + v);
+        return acc;
+      }, []);
+
+      // --- Chart ---
+      const ctx = document.getElementById('plChart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Havi profit',
+              data: monthly,
+              borderWidth: 1
+            },
+            {
+              type: 'line',
+              label: 'Kumulált',
+              data: cumul,
+              tension: .25
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { ticks: { callback: v => HU(v) + ' Ft' } }
+          },
+          plugins: {
+            legend: { labels:{ color:'#e6e6e6' } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${HU(ctx.parsed.y)} Ft`
+              }
+            }
+          }
+        }
+      });
+    })();
+  </script>
+
 </body>
 </html>
