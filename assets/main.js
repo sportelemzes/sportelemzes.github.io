@@ -1,89 +1,148 @@
-async function loadJSON(path){
-  const res = await fetch(path, {cache:'no-store'});
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  return res.json();
-}
-function huf(n){
-  return new Intl.NumberFormat('hu-HU',{style:'currency',currency:'HUF',maximumFractionDigits:0}).format(n);
-}
+// assets/main.js
+(async function () {
+  const cacheBust = () => `?_=${Date.now()}`;
+  const $ = (sel) => document.querySelector(sel);
 
-async function initPL(){
-  try{
-    const data = await loadJSON('./data/monthly-pl.json');
-    const labels = data.map(d=>d.month);
-    const profits = data.map(d=>d.profit);
-    const cum = data.map(d=>d.cum);
+  const picksTbody = $("#picksTable");
+  const plCanvas = $("#plChart");
+  const plEmpty = $("#plEmpty");
 
-    const ctx = document.getElementById('plChart').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          { type:'bar', label:'Havi profit', data: profits },
-          { type:'line', label:'Kumulált', data: cum, tension:0.3 }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { labels: { color:'#ddd' } },
-          tooltip: { callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${huf(ctx.parsed.y)}` } }
-        },
-        scales: {
-          x: { ticks:{ color:'#bbb' }, grid:{ color:'#222' } },
-          y: { ticks:{ color:'#bbb', callback:(v)=>`${Math.round(v/1000)}k` }, grid:{ color:'#222' } }
-        }
-      }
-    });
-
-    const total = profits.reduce((a,b)=>a+b,0);
-    document.getElementById('plSummary').textContent = `Összesített: ${huf(total)}`;
-  }catch(e){
-    document.getElementById('plSummary').textContent = 'Nincs még adat a monthly-pl.json-ban.';
+  async function loadJSON(path) {
+    const res = await fetch(`${path}${cacheBust()}`);
+    if (!res.ok) throw new Error(`Fetch failed: ${path}`);
+    return res.json();
   }
-}
 
-function renderPicks(rows){
-  const tbody = document.querySelector('#picksTable tbody');
-  tbody.innerHTML = '';
-  for(const p of rows){
-    const tr = document.createElement('tr');
-    const cells = [
-      p.id,
-      p.sport,
-      p.market,
-      p.selection + (p.line ? ` (${p.line})` : ''),
-      p.odds?.toFixed?.(2) ?? p.odds,
-      p.stake,
-      p.status,
-      p.result ?? '',
-      (p.profit!=null? huf(p.profit) : '')
-    ];
-    for(const c of cells){
-      const td = document.createElement('td');
-      td.textContent = c;
-      tr.appendChild(td);
+  function fmtDate(iso) {
+    try {
+      return new Date(iso).toLocaleDateString("hu-HU", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    } catch {
+      return iso;
     }
-    tbody.appendChild(tr);
   }
-}
 
-async function initPicks(){
-  try{
-    const data = await loadJSON('./data/picks.json');
-    const select = document.getElementById('statusFilter');
-    const apply = ()=>{
-      const val = select.value;
-      const rows = data.filter(p=> val==='all' ? true : p.status===val);
-      renderPicks(rows);
-    };
-    select.addEventListener('change', apply);
-    apply();
-  }catch(e){
-    renderPicks([]);
+  function z(n) {
+    return typeof n === "number" ? n.toFixed(2) : n ?? "";
   }
-}
 
-initPL();
-initPicks();
+  // ----- Tippek táblázat ----------------------------------------------------
+  try {
+    const picks = await loadJSON("/data/picks.json");
+    if (Array.isArray(picks) && picks.length && picksTbody) {
+      picksTbody.innerHTML = picks
+        .sort(
+          (a, b) =>
+            new Date(b.commence_time || 0) - new Date(a.commence_time || 0)
+        )
+        .map((p) => {
+          const market =
+            p.market === "totals"
+              ? `Totals ${p.line ?? ""}`
+              : (p.market || "h2h").toUpperCase();
+          const tipp =
+            p.market === "totals"
+              ? `${p.selection || ""} ${p.line ?? ""}`
+              : (p.selection || "").toUpperCase();
+
+          // Eredmény/profit – ha a settle script már számolta:
+          const eredm =
+            p.result ||
+            (p.status === "won"
+              ? "Nyert"
+              : p.status === "lost"
+              ? "Vesztes"
+              : p.status === "push"
+              ? "Push"
+              : (p.status || "open"));
+
+          let profit = "";
+          if (typeof p.profit === "number") profit = z(p.profit);
+          else if (p.status === "won" && p.odds && p.stake)
+            profit = z(p.stake * (p.odds - 1));
+          else if (p.status === "lost" && p.stake) profit = z(-p.stake);
+
+          const matchName =
+            p.match ||
+            (p.home_team && p.away_team
+              ? `${p.home_team} – ${p.away_team}`
+              : (p.eventId || "").slice(0, 8));
+
+          return `
+            <tr>
+              <td>${fmtDate(p.commence_time)}</td>
+              <td>${matchName}</td>
+              <td>${market}</td>
+              <td>${tipp}</td>
+              <td>${z(p.odds)}</td>
+              <td>${z(p.stake)}</td>
+              <td>${eredm}</td>
+              <td>${profit}</td>
+            </tr>
+          `;
+        })
+        .join("");
+    } else if (picksTbody) {
+      picksTbody.innerHTML = "";
+    }
+  } catch (e) {
+    if (picksTbody) picksTbody.innerHTML = `<tr><td colspan="8">Nem sikerült betölteni a tippeket.</td></tr>`;
+    console.error(e);
+  }
+
+  // ----- Havi P/L grafikon --------------------------------------------------
+  try {
+    const monthly = await loadJSON("/data/monthly-pl.json");
+    if (Array.isArray(monthly) && monthly.length && plCanvas) {
+      if (plEmpty) plEmpty.style.display = "none";
+
+      const labels = monthly.map((m) => m.month || m.label || "");
+      const monthlyPnL = monthly.map((m) => +m.profit || 0);
+      // kumulált
+      const cum = [];
+      monthlyPnL.reduce((acc, v, i) => (cum[i] = acc + v), 0);
+
+      const ctx = plCanvas.getContext("2d");
+      // eslint-disable-next-line no-undef
+      new Chart(ctx, {
+        data: {
+          labels,
+          datasets: [
+            {
+              type: "bar",
+              label: "Havi profit",
+              data: monthlyPnL,
+            },
+            {
+              type: "line",
+              label: "Kumulált",
+              data: cum,
+              yAxisID: "y",
+              tension: 0.2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true },
+          },
+          plugins: {
+            legend: { position: "top" },
+          },
+        },
+      });
+    } else if (plEmpty) {
+      plEmpty.style.display = "block";
+    }
+  } catch (e) {
+    if (plEmpty) {
+      plEmpty.style.display = "block";
+      plEmpty.textContent = "Nem sikerült betölteni a P/L adatokat.";
+    }
+    console.error(e);
+  }
+})();
