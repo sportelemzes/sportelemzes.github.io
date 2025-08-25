@@ -199,36 +199,38 @@
     $('#date').value = new Date().toISOString().slice(0,10);
     $('#p_dt').value  = new Date().toISOString().slice(0,16);
 
-    /* poszt HTML sablon — FIGYELEM: a belső </script> ESCAPELVE VAN! */
+    /* poszt HTML sablon – a belső záró scripttag kiírását daraboljuk,
+       hogy a böngésző HTML-parsere még véletlenül se lássa egyben. */
     function renderPostHTML({title, date, league, body}){
-      return `<!doctype html>
-<html lang="hu"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${title}</title>
-<link rel="icon" href="/assets/favicon.ico">
-<link rel="stylesheet" href="/assets/style.css?v=4">
-</head>
-<body>
-<header class="header-hero">
-  <nav class="hero-nav">
-    <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
-    <div class="links"><a href="/">Elemzések</a><a href="/stats.html">Statisztika</a></div>
-  </nav>
-  <div class="hero-inner"><h1>${title}</h1><p>${league? league+' • ': ''}${date}</p></div>
-</header>
-<main class="container" style="max-width:900px;margin:0 auto;padding:20px;">
-  <article class="post-card" style="background:#121212;">${body}</article>
-</main>
-<script>
-(function(){
-  const path = location.pathname.replace(/\\/$/,'') || '/';
-  document.querySelectorAll('.hero-nav .links a').forEach(a=>{
-    const href = a.getAttribute('href').replace(/\\/$/,'') || '/';
-    if(href===path) a.classList.add('active');
-  });
-})();
-<\/script>
-</body></html>`;
+      const closeScript = '</' + 'script>';
+      return [
+        '<!doctype html>',
+        '<html lang="hu"><head>',
+        '<meta charset="utf-8"/>',
+        '<meta name="viewport" content="width=device-width,initial-scale=1"/>',
+        `<title>${title}</title>`,
+        '<link rel="icon" href="/assets/favicon.ico">',
+        '<link rel="stylesheet" href="/assets/style.css?v=4">',
+        '</head><body>',
+        '<header class="header-hero">',
+        '  <nav class="hero-nav">',
+        '    <a class="brand" href="/">⚽ <span>SportElemzés</span></a>',
+        '    <div class="links"><a href="/">Elemzések</a><a href="/stats.html">Statisztika</a></div>',
+        '  </nav>',
+        `  <div class="hero-inner"><h1>${title}</h1><p>${league? league+' • ': ''}${date}</p></div>`,
+        '</header>',
+        '<main class="container" style="max-width:900px;margin:0 auto;padding:20px;">',
+        `  <article class="post-card" style="background:#121212;">${body}</article>`,
+        '</main>',
+        '<script>(function(){',
+        "  const p=location.pathname.replace(/\\/$/,'')||'/';",
+        "  document.querySelectorAll('.hero-nav .links a').forEach(a=>{",
+        "    const h=(a.getAttribute('href')||'').replace(/\\/$/,'')||'/';",
+        "    if(h===p)a.classList.add('active');",
+        '  });',
+        '})();' + closeScript,
+        '</body></html>'
+      ].join('\n');
     }
 
     /* GitHub API wrapper */
