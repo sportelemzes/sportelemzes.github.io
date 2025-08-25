@@ -18,3 +18,11 @@ a { color: #0a66c2; }
 h1, h2 { margin: 8px 0 12px; }
 a { color: #7db1ff; }
 a:hover { text-decoration: underline; }
+.header-hero{
+  position:relative;
+  height:260px;
+  background-image:url("/assets/head.webp"); /* <-- ez az új */
+  background-size:cover;
+  background-position:center;
+  color:#fff;
+}
