@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sportelemzes.github.io/sitemap.xml
