@@ -1,13 +1,12 @@
-[
-  {
-    "id": "pick-001",
-    "sport": "soccer_epl",
-    "eventId": "cc48d3216bca8edbd0497f9f6877d80c",
-    "market": "h2h",
-    "selection": "away",
-    "odds": 2.10,
-    "stake": 1000,
-    "commence_time": "2025-08-25T19:00:00Z",
-    "status": "open"
-  }
-]
+{
+  "id": "pick-003",
+  "sport": "soccer_epl",
+  "eventId": "IDE_AZ_EVENT_ID",
+  "market": "h2h",          // vagy "totals"
+  "selection": "home",       // h2h: home/away/draw; totals: over/under
+  "line": 2.5,               // csak totalsnál kell
+  "odds": 1.92,
+  "stake": 1000,
+  "commence_time": "2025-08-31T15:30:00Z",
+  "status": "open"
+}
