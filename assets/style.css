@@ -16,3 +16,5 @@ footer{padding:14px 20px;color:#888;border-top:1px solid #222;margin-top:20px;te
 body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 a { color: #0a66c2; }
 h1, h2 { margin: 8px 0 12px; }
+a { color: #7db1ff; }
+a:hover { text-decoration: underline; }
