@@ -162,14 +162,14 @@
 
   <script>
     /* ——— SAJÁT REPO ——— */
-    const OWNER = 'sportelemzes';
-    const REPO  = 'sportelemzes.github.io';
+    const OWNER  = 'sportelemzes';
+    const REPO   = 'sportelemzes.github.io';
     const BRANCH = 'main';
 
     /* segédek */
-    const $ = s => document.querySelector(s);
-    const b64 = str => btoa(unescape(encodeURIComponent(str)));
-    const b64d = b => decodeURIComponent(escape(atob(b)));
+    const $  = s => document.querySelector(s);
+    const b64  = str => btoa(unescape(encodeURIComponent(str)));
+    const b64d = b   => decodeURIComponent(escape(atob(b)));
 
     function setTokInfo(){
       const t = localStorage.getItem('gh_token');
@@ -197,9 +197,9 @@
       return `${d}-${core}`.replace(/--+/g,'-');
     }
     $('#date').value = new Date().toISOString().slice(0,10);
-    $('#p_dt').value = new Date().toISOString().slice(0,16);
+    $('#p_dt').value  = new Date().toISOString().slice(0,16);
 
-    /* poszt HTML sablon */
+    /* poszt HTML sablon — FIGYELEM: a belső </script> ESCAPELVE VAN! */
     function renderPostHTML({title, date, league, body}){
       return `<!doctype html>
 <html lang="hu"><head>
@@ -227,7 +227,7 @@
     if(href===path) a.classList.add('active');
   });
 })();
-</script>
+<\/script>
 </body></html>`;
     }
 
@@ -254,12 +254,12 @@
       const token = localStorage.getItem('gh_token');
       if(!token){ alert('Adj meg token-t fent.'); return; }
 
-      const title = $('#title').value.trim();
-      const date  = $('#date').value || new Date().toISOString().slice(0,10);
-      const league= $('#league').value.trim();
-      const excerpt=$('#excerpt').value.trim();
-      const body  = $('#body').value.trim();
-      let slug    = $('#slug').value.trim() || makeSlug(title, date);
+      const title   = $('#title').value.trim();
+      const date    = $('#date').value || new Date().toISOString().slice(0,10);
+      const league  = $('#league').value.trim();
+      const excerpt = $('#excerpt').value.trim();
+      const body    = $('#body').value.trim();
+      let   slug    = $('#slug').value.trim() || makeSlug(title, date);
       if(!title || !body){ alert('Cím és cikk kötelező.'); return; }
 
       const filePath = `posts/${slug}.html`;
@@ -296,15 +296,15 @@
       const token = localStorage.getItem('gh_token');
       if(!token){ alert('Adj meg token-t fent.'); return; }
 
-      const sport  = $('#p_sport').value.trim() || 'soccer_epl';
-      const eventId= $('#p_event').value.trim() || 'match';
-      const kickoff= $('#p_dt').value;
-      const market = $('#p_market').value;
+      const sport   = $('#p_sport').value.trim() || 'soccer_epl';
+      const eventId = $('#p_event').value.trim() || 'match';
+      const kickoff = $('#p_dt').value;
+      const market  = $('#p_market').value;
       const selection = $('#p_sel').value.trim();
-      const line   = $('#p_line').value.trim();
-      const odds   = parseFloat($('#p_odds').value);
-      const stake  = parseFloat($('#p_stake').value||'0');
-      const status = $('#p_status').value;
+      const line    = $('#p_line').value.trim();
+      const odds    = parseFloat($('#p_odds').value);
+      const stake   = parseFloat($('#p_stake').value||'0');
+      const status  = $('#p_status').value;
 
       if(!selection || !odds || !stake){
         alert('Választás, odds és tét kötelező.'); return;
@@ -312,15 +312,15 @@
 
       const pick = {
         id: makePickId(eventId),
-        sport: sport,
-        eventId: eventId,
-        market: market,
-        selection: selection,
+        sport,
+        eventId,
+        market,
+        selection,
         line: line ? parseFloat(line) : null,
         odds: parseFloat(odds),
         stake: parseFloat(stake),
         commence_time: toISOZ(kickoff),
-        status: status
+        status
       };
 
       try{
@@ -328,7 +328,7 @@
         let file, arr;
         try {
           file = await ghGet('data/picks.json');
-          arr = JSON.parse(b64d(file.content));
+          arr  = JSON.parse(b64d(file.content));
           if(!Array.isArray(arr)) arr = [];
           arr.unshift(pick);
           await ghPut('data/picks.json', JSON.stringify(arr, null, 2), `Add pick ${pick.id}`, file.sha);
