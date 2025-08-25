@@ -49,3 +49,34 @@
     }
   });
 })();
+// --- poszt tip-kártyák ---
+(function () {
+  function norm(s) {
+    return (s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  const root = document.querySelector('main, .content, #content, body');
+  if (!root) return;
+
+  const h3s = root.querySelectorAll('h3');
+  h3s.forEach(h3 => {
+    const t = norm(h3.textContent);
+    if (t.startsWith('fo tipp') || t.startsWith('alternativa')) {
+      const wrap = document.createElement('div');
+      wrap.className = 'tip-card ' + (t.startsWith('fo tipp') ? 'primary' : 'alt');
+      h3.parentNode.insertBefore(wrap, h3);
+      wrap.appendChild(h3);
+
+      let n = wrap.nextSibling;
+      while (n && !(n.tagName && n.tagName.toLowerCase() === 'h3')) {
+        const next = n.nextSibling;
+        wrap.appendChild(n);
+        n = next;
+      }
+    }
+  });
+})();
