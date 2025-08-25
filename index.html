@@ -1,91 +1,123 @@
 <!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SportElemzés – Elemzések</title>
-
-  <!-- (opcionális) Favicon -->
-  <link rel="icon" href="/assets/favicon.ico">
-
-  <!-- A fő stílus (abszolút útvonal, hogy biztosan betöltődjön) -->
-  <link rel="stylesheet" href="/assets/style.css?v=4" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SportElemzés – Admin</title>
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  body{background:#0b0b0b;color:#e6e6e6}
+  .wrap{max-width:980px;margin:24px auto;padding:0 16px}
+  .card{background:#121212;border:1px solid #1f1f1f;border-radius:12px;padding:16px;margin:16px 0}
+  label{display:block;margin:10px 0 6px;color:#cfcfcf}
+  input,textarea,select{width:100%;background:#0f0f0f;border:1px solid #333;color:#e6e6e6;border-radius:8px;padding:10px}
+  textarea{min-height:220px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  button{background:#2470ff;border:0;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
+  .muted{color:#9aa0a6}
+  .ok{color:#7dffa3}
+  .err{color:#ff9292}
+  .hero-sm{height:220px}
+</style>
 </head>
 <body>
-
-  <!-- HERO + MENÜ -->
-  <header class="header-hero">
-    <nav class="hero-nav">
-      <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
-      <div class="links">
-        <a href="/">Elemzések</a>
-        <a href="/stats.html">Statisztika</a>
-      </div>
-    </nav>
-
-    <div class="hero-inner">
-      <h1>SportElemzés</h1>
-      <p>Elemzések, adatok, eredmények – naponta frissítve</p>
+<header class="header-hero hero-sm">
+  <nav class="hero-nav">
+    <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
+    <div class="links">
+      <a href="/">Elemzések</a>
+      <a href="/stats.html">Statisztika</a>
+      <a href="/admin/">Admin</a>
     </div>
-  </header>
+  </nav>
+  <div class="hero-inner">
+    <h1>Admin</h1>
+    <p class="muted">Gyors közzététel GitHub API-val (nincs szerver)</p>
+  </div>
+</header>
 
-  <!-- TARTALOM -->
-  <main class="container" style="max-width:960px;margin:0 auto;padding:20px;">
-    <h2 style="margin:8px 0 12px;">Friss elemzések</h2>
-    <div id="posts"></div>
-  </main>
+<main class="wrap">
+  <!-- TOKEN -->
+  <div class="card">
+    <p><strong>Token</strong> (egyszer add meg, a böngésződben marad)<br>
+    <span class="muted">Fine-grained token: csak ehhez a repohoz, <em>Repository contents: Read/Write</em>.</span></p>
+    <div class="row">
+      <input id="token" type="password" placeholder="ghp_xxx..." />
+      <button id="saveToken">Token mentése</button>
+    </div>
+    <p class="muted" id="tokInfo"></p>
+  </div>
 
-  <!-- Aktív menü kiemelése -->
-  <script>
-    (function () {
-      const path = location.pathname.replace(/\/$/, '') || '/';
-      document.querySelectorAll('.hero-nav .links a').forEach(a => {
-        const href = a.getAttribute('href').replace(/\/$/, '') || '/';
-        if (href === path) a.classList.add('active');
-      });
-    })();
-  </script>
+  <!-- ÚJ CIKK -->
+  <div class="card">
+    <h2 style="margin-top:0">Új cikk</h2>
+    <div class="row">
+      <div>
+        <label>Cím</label>
+        <input id="title" placeholder="Pl. Newcastle vs Liverpool – elemzés és tipp" />
+      </div>
+      <div>
+        <label>Dátum</label>
+        <input id="date" type="date" />
+      </div>
+    </div>
 
-  <!-- Posztlista betöltése a posts/index.json alapján -->
-  <script>
-    (function () {
-      const wrap = document.getElementById('posts');
+    <div class="row">
+      <div>
+        <label>Rövid kivonat (excerpt)</label>
+        <input id="excerpt" placeholder="1–2 mondatban a lényeg" />
+      </div>
+      <div>
+        <label>Liga / sport (opcionális)</label>
+        <input id="league" placeholder="EPL / Foci" />
+      </div>
+    </div>
 
-      function card(p) {
-        return `
-          <article class="post-card" style="padding:16px;border:1px solid #eee;border-radius:12px;margin:12px 0;">
-            <h3 style="margin:0 0 6px;font-size:20px;">
-              <a href="/posts/${p.slug}.html">${p.title}</a>
-            </h3>
-            <div class="meta" style="color:#666;font-size:14px;">
-              ${p.date || ''} ${p.league ? ' • ' + p.league : (p.sport ? ' • ' + p.sport : '')}
-            </div>
-            <p>${p.excerpt || ''}</p>
-            <p><a href="/posts/${p.slug}.html">Tovább →</a></p>
-          </article>
-        `;
-      }
+    <label>Cikk szövege (HTML vagy sima szöveg)</label>
+    <textarea id="body" placeholder="Írd ide a cikket..."></textarea>
 
-      fetch('/posts/index.json?_=' + Date.now())
-        .then(r => {
-          if (!r.ok) throw new Error('posts/index.json nem érhető el');
-          return r.json();
-        })
-        .then(items => {
-          if (!Array.isArray(items) || !items.length) {
-            wrap.innerHTML = '<p>Még nincs közzétett elemzés.</p>';
-            return;
-          }
-          // újabb poszt felül
-          items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-          wrap.innerHTML = items.map(card).join('');
-        })
-        .catch(err => {
-          console.error(err);
-          wrap.innerHTML = '<p>Nem sikerült betölteni a posztlistát.</p>';
-        });
-    })();
-  </script>
+    <div class="row" style="align-items:center;margin-top:12px">
+      <div>
+        <label>Slug (ha üres, a cím + dátum alapján készül)</label>
+        <input id="slug" placeholder="2025-08-25-newcastle-liverpool" />
+      </div>
+      <div style="text-align:right">
+        <button id="publish">Cikk közzététele</button>
+      </div>
+    </div>
 
-</body>
-</html>
+    <p id="msg" class="muted"></p>
+  </div>
+
+  <!-- ÚJ TIPP -->
+  <div class="card">
+    <h2 style="margin-top:0">Új tipp a statisztikába</h2>
+
+    <div class="row-3">
+      <div>
+        <label>Sport kulcs</label>
+        <input id="p_sport" value="soccer_epl" placeholder="pl. soccer_epl" />
+      </div>
+      <div>
+        <label>Meccs / Event ID</label>
+        <input id="p_event" placeholder="pl. ARS-CHE vagy valamilyen azonosító" />
+      </div>
+      <div>
+        <label>Kezdés (helyi idő)</label>
+        <input id="p_dt" type="datetime-local" />
+      </div>
+    </div>
+
+    <div class="row-3">
+      <div>
+        <label>Piac</label>
+        <select id="p_market">
+          <option value="h2h">h2h (1X2)</option>
+          <option value="totals">totals (gólok)</option>
+          <option value="asian_handicap">asian_handicap</option>
+        </select>
+      </div>
+      <div>
+        <label>Választás</label>
+        <input id="p_se_
