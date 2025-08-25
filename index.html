@@ -30,12 +30,17 @@
 </main>
 
 <footer class="muted" style="text-align:center;padding:24px 0">
-<div class="links">
-  <a href="/">Elemzések</a>
-  <a href="/stats.html">Statisztika</a>
+  © <span id="y"></span> SportElemzés ·
+  <a href="/">Elemzések</a> ·
+  <a href="/stats.html">Statisztika</a> ·
   <a href="/privacy.html">Adatkezelés</a>
-</div>
 </footer>
+
+<script>
+  const y = document.getElementById('y');
+  if (y) y.textContent = new Date().getFullYear(); // védelem, ha nincs ilyen elem
+</script>
+
 
 <script>
   document.getElementById('y').textContent = new Date().getFullYear();
