@@ -1,51 +1,53 @@
 <!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SportElemzés – P/L és tippek</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SportElemzés – Elemzések</title>
+  <link rel="icon" href="./assets/favicon.ico">
   <link rel="stylesheet" href="./assets/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .nav { display:flex; gap:1rem; align-items:center; padding:12px 16px; border-bottom:1px solid #eee; }
+    .nav a { text-decoration:none; font-weight:600; }
+    .container { max-width:960px; margin:0 auto; padding:20px; }
+    .post-card { padding:16px; border:1px solid #eee; border-radius:12px; margin:12px 0; }
+    .post-card h2 { margin:0 0 6px 0; font-size:20px; }
+    .meta { color:#666; font-size:14px; }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>SportElemzés – Havi P/L + Tippek</h1>
-    <p class="muted">Az adatok a <code>data/</code> mappából érkeznek (monthly-pl.json, picks.json).</p>
+  <header class="nav">
+    <a href="/" aria-label="Főoldal">🏠 Elemzések</a>
+    <a href="/stats.html">📈 Statisztika</a>
   </header>
 
-  <main>
-    <section class="card">
-      <h2>Havi P/L</h2>
-      <canvas id="plChart" height="160"></canvas>
-      <div id="plSummary" class="summary"></div>
-    </section>
-
-    <section class="card">
-      <h2>Tippek</h2>
-      <div class="controls">
-        <label>Szűrés státusz szerint:
-          <select id="statusFilter">
-            <option value="all">Összes</option>
-            <option value="open">Nyitott</option>
-            <option value="settled">Lezárt</option>
-          </select>
-        </label>
-      </div>
-      <table id="picksTable">
-        <thead>
-          <tr>
-            <th>ID</th><th>Sport</th><th>Piac</th><th>Választás</th><th>Odds</th><th>Tét</th><th>Állapot</th><th>Eredmény</th><th>Profit</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+  <main class="container">
+    <h1>Friss elemzések</h1>
+    <div id="posts"></div>
   </main>
 
-  <footer>
-    <p>© 2025 SportElemzés – statikus MVP</p>
-  </footer>
-
-  <script src="./assets/main.js"></script>
+  <script>
+    // Egyszerű lista a posts/index.json alapján
+    fetch('/posts/index.json?_=' + Date.now())
+      .then(r => r.json())
+      .then(items => {
+        const wrap = document.getElementById('posts');
+        if (!Array.isArray(items) || !items.length) {
+          wrap.innerHTML = '<p>Még nincs közzétett elemzés.</p>';
+          return;
+        }
+        wrap.innerHTML = items.map(p => `
+          <article class="post-card">
+            <h2><a href="/posts/${p.slug}.html">${p.title}</a></h2>
+            <div class="meta">${p.date} • ${p.league || p.sport || ''}</div>
+            <p>${p.excerpt}</p>
+            <p><a href="/posts/${p.slug}.html">Tovább →</a></p>
+          </article>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById('posts').innerHTML = '<p>Nem érhető el a posztlista.</p>';
+      });
+  </script>
 </body>
 </html>
