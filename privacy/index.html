@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adatkezelési tájékoztató – SportElemzés</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <script src="/assets/site.js" defer></script>
+</head>
+<body>
+
+  <!-- Hero / felső kép + menü -->
+  <header class="header-hero">
+    <nav class="hero-nav">
+      <a class="brand" href="/"><span>SportElemzés</span></a>
+      <div class="links">
+        <a href="/">Elemzések</a>
+        <a href="/stats.html">Statisztika</a>
+        <a class="active" href="/privacy.html">Adatkezelés</a>
+      </div>
+    </nav>
+
+    <div class="hero-inner">
+      <h1>Adatkezelési tájékoztató</h1>
+      <p>Rövid összefoglaló az oldal adatkezeléséről és a cookie-król.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Összefoglaló</h2>
+      <p>
+        Az oldal statikus tartalom, nem használunk saját cookie-kat és nem gyűjtünk
+        személyes adatot. Nem fut hirdetési vagy analitikai kód.
+      </p>
+      <p>
+        A honlap <strong>GitHub Pages</strong> tárhelyen fut. A GitHub
+        a szolgáltatás működtetése során szervernaplókat kezelhet
+        (pl. IP-cím, időbélyeg). A GitHub adatkezeléséről bővebben:
+        <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">GitHub Privacy Statement</a>.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Harmadik féltől származó beágyazások</h2>
+      <p>
+        Jelenleg nem használunk külső beágyazást (pl. YouTube, térkép, hozzászólás).
+        Ha a jövőben ilyet beillesztenénk, azt a működés megkezdése előtt jelezzük, és
+        szükség esetén hozzájárulás-kérést (cookie banner) is megjelenítünk.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Elérhetőség</h2>
+      <p>
+        Kapcsolat: <a href="mailto:you@example.com">you@example.com</a>
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      © <span id="y"></span> SportElemzés ·
+      <a href="/privacy.html">Adatkezelés</a> ·
+      <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a>
+    </p>
+  </footer>
+
+  <script>
+    // évszám a láblécben
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
