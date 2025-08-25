@@ -120,4 +120,226 @@
       </div>
       <div>
         <label>Választás</label>
-        <input id="p_se_
+        <input id="p_sel" list="selList" placeholder="home / draw / away • over / under" />
+        <datalist id="selList">
+          <option>home</option><option>draw</option><option>away</option>
+          <option>over</option><option>under</option>
+        </datalist>
+      </div>
+      <div>
+        <label>Vonal (opcionális)</label>
+        <input id="p_line" type="number" step="0.25" placeholder="pl. 2.5" />
+      </div>
+    </div>
+
+    <div class="row-3">
+      <div>
+        <label>Odds</label>
+        <input id="p_odds" type="number" step="0.01" placeholder="pl. 1.90" />
+      </div>
+      <div>
+        <label>Tét</label>
+        <input id="p_stake" type="number" step="1" value="1000" />
+      </div>
+      <div>
+        <label>Státusz</label>
+        <select id="p_status">
+          <option value="open">open</option>
+          <option value="win">win</option>
+          <option value="lose">lose</option>
+          <option value="void">void</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:12px">
+      <button id="savePick">Tipp mentése</button>
+    </div>
+    <p id="msgPick" class="muted"></p>
+  </div>
+</main>
+
+<script>
+/*** ÁLLÍTSD BE EZT A KÉT SORT A SAJÁT REPO-DHOZ ***/
+const OWNER = 'sportelemzes';           // <--- GitHub felhasználó/orga
+const REPO  = 'sportelemzes.github.io'; // <--- repo neve
+const BRANCH = 'main';
+
+/* ——— segédek ——— */
+const $ = s => document.querySelector(s);
+const b64 = str => btoa(unescape(encodeURIComponent(str)));
+const b64d = b => decodeURIComponent(escape(atob(b)));
+function setTokInfo(){
+  const t = localStorage.getItem('gh_token');
+  $('#tokInfo').innerHTML = t ? '<span class="ok">Token elmentve (helyileg).</span> <a href="#" id="clearTok">[törlés]</a>'
+                              : '<span class="err">Nincs token elmentve.</span>';
+  if ($('#clearTok')) $('#clearTok').onclick = (e)=>{ e.preventDefault(); localStorage.removeItem('gh_token'); setTokInfo(); };
+}
+setTokInfo();
+$('#saveToken').onclick = ()=>{
+  const t = $('#token').value.trim();
+  if(!t){ alert('Adj meg egy token-t'); return; }
+  localStorage.setItem('gh_token', t);
+  $('#token').value=''; setTokInfo();
+};
+
+/* slug gyártás cikkhez */
+function makeSlug(title, dateStr){
+  const d = dateStr || new Date().toISOString().slice(0,10);
+  const core = (title||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  return `${d}-${core}`.replace(/--+/g,'-');
+}
+$('#date').value = new Date().toISOString().slice(0,10);
+$('#p_dt').value = new Date().toISOString().slice(0,16);
+
+/* poszt HTML sablon */
+function renderPostHTML({title, date, league, body}){
+return `<!doctype html>
+<html lang="hu"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${title}</title>
+<link rel="icon" href="/assets/favicon.ico">
+<link rel="stylesheet" href="/assets/style.css?v=4">
+</head>
+<body>
+<header class="header-hero">
+  <nav class="hero-nav">
+    <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
+    <div class="links"><a href="/">Elemzések</a><a href="/stats.html">Statisztika</a></div>
+  </nav>
+  <div class="hero-inner"><h1>${title}</h1><p>${league? league+' • ': ''}${date}</p></div>
+</header>
+<main class="container" style="max-width:900px;margin:0 auto;padding:20px;">
+  <article class="post-card" style="background:#121212;">${body}</article>
+</main>
+<script>
+(function(){
+  const path = location.pathname.replace(/\\/$/,'') || '/';
+  document.querySelectorAll('.hero-nav .links a').forEach(a=>{
+    const href = a.getAttribute('href').replace(/\\/$/,'') || '/';
+    if(href===path) a.classList.add('active');
+  });
+})();
+</script>
+</body></html>`;
+}
+
+/* GitHub API wrapper */
+async function ghGet(path){
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`, {
+    headers:{ Authorization: 'token ' + localStorage.getItem('gh_token') }
+  });
+  if(!r.ok) throw new Error('GET ' + path + ' ' + r.status);
+  return r.json();
+}
+async function ghPut(path, content, message, sha){
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
+    method:'PUT',
+    headers:{ 'Content-Type':'application/json', Authorization: 'token ' + localStorage.getItem('gh_token') },
+    body: JSON.stringify({ message, content: b64(content), branch: BRANCH, sha })
+  });
+  if(!r.ok){ const t=await r.text(); throw new Error('PUT '+path+' '+r.status+' '+t); }
+  return r.json();
+}
+
+/* ——— CIKK PUBLISH ——— */
+$('#publish').onclick = async ()=>{
+  const token = localStorage.getItem('gh_token');
+  if(!token){ alert('Adj meg token-t fent.'); return; }
+
+  const title = $('#title').value.trim();
+  const date  = $('#date').value || new Date().toISOString().slice(0,10);
+  const league= $('#league').value.trim();
+  const excerpt=$('#excerpt').value.trim();
+  const body  = $('#body').value.trim();
+  let slug    = $('#slug').value.trim() || makeSlug(title, date);
+  if(!title || !body){ alert('Cím és cikk kötelező.'); return; }
+
+  const filePath = `posts/${slug}.html`;
+  try{
+    $('#msg').textContent = 'Fájl létrehozása...';
+    const html = renderPostHTML({title, date, league, body: body.replace(/\n/g,'<br>')});
+    let old=null; try{ old = await ghGet(filePath); }catch(_){}
+    await ghPut(filePath, html, `Add post: ${title}`, old?.sha);
+
+    $('#msg').textContent = 'Lista frissítése...';
+    const idx = await ghGet('posts/index.json');
+    const arr = JSON.parse(b64d(idx.content));
+    arr.unshift({ title, slug, date, league: league||'', sport:'Foci',
+      excerpt: excerpt || (body.slice(0,160)+'...').replace(/<[^>]*>/g,'') });
+    await ghPut('posts/index.json', JSON.stringify(arr, null, 2), `Update posts index with ${slug}`, idx.sha);
+
+    $('#msg').innerHTML = `<span class="ok">Kész!</span> <a href="/posts/${slug}.html" target="_blank">Megnyitás</a>`;
+  }catch(e){
+    console.error(e);
+    $('#msg').innerHTML = `<span class="err">Hiba: ${e.message}</span>`;
+  }
+};
+
+/* ——— TIPP MENTÉS ——— */
+function toISOZ(local){
+  // datetime-local -> ISO UTC string
+  const d = new Date(local);
+  if (isNaN(d.getTime())) return new Date().toISOString();
+  return d.toISOString();
+}
+function makePickId(eventId){
+  return `${(eventId||'evt').toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${Date.now().toString(36)}`;
+}
+$('#savePick').onclick = async ()=>{
+  const token = localStorage.getItem('gh_token');
+  if(!token){ alert('Adj meg token-t fent.'); return; }
+
+  const sport  = $('#p_sport').value.trim() || 'soccer_epl';
+  const eventId= $('#p_event').value.trim() || 'match';
+  const kickoff= $('#p_dt').value;
+  const market = $('#p_market').value;
+  const selection = $('#p_sel').value.trim();
+  const line   = $('#p_line').value.trim();
+  const odds   = parseFloat($('#p_odds').value);
+  const stake  = parseFloat($('#p_stake').value||'0');
+  const status = $('#p_status').value;
+
+  if(!selection || !odds || !stake){
+    alert('Választás, odds és tét kötelező.'); return;
+  }
+
+  const pick = {
+    id: makePickId(eventId),
+    sport: sport,
+    eventId: eventId,
+    market: market,          // h2h / totals / asian_handicap
+    selection: selection,    // home/draw/away | over/under | AH irány
+    line: line ? parseFloat(line) : null,
+    odds: parseFloat(odds),
+    stake: parseFloat(stake),
+    commence_time: toISOZ(kickoff),
+    status: status           // open/win/lose/void
+  };
+
+  try{
+    $('#msgPick').textContent = 'Mentés...';
+    const file = await ghGet('data/picks.json');
+    let arr; try{ arr = JSON.parse(b64d(file.content)); }catch(_){ arr = []; }
+    if(!Array.isArray(arr)) arr = [];
+    // új tipp a tömb ELEJÉRE
+    arr.unshift(pick);
+    await ghPut('data/picks.json', JSON.stringify(arr, null, 2), `Add pick ${pick.id}`, file.sha);
+    $('#msgPick').innerHTML = `<span class="ok">Tipp elmentve.</span>`;
+  }catch(e){
+    // ha nincs még picks.json, létrehozzuk
+    if (e.message.startsWith('GET data/picks.json 404')) {
+      const arr = [pick];
+      await ghPut('data/picks.json', JSON.stringify(arr, null, 2), `Create picks and add ${pick.id}`);
+      $('#msgPick').innerHTML = `<span class="ok">Tipp elmentve (új fájl készült).</span>`;
+      return;
+    }
+    console.error(e);
+    $('#msgPick').innerHTML = `<span class="err">Hiba: ${e.message}</span>`;
+  }
+};
+</script>
+</body>
+</html>
