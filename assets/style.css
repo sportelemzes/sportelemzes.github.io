@@ -270,3 +270,44 @@ footer a{color:#8ac}
   .pick-card h3{ font-size:1.02rem; }
   .pick-card .meta{ gap:8px 10px; }
 }
+/* --- Feed (főoldal) kártyák és térköz --- */
+#list.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;                 /* EZ adja a dobozok közti távolságot */
+}
+
+.card {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.card h3 a {
+  color: #d6e3ff;
+  text-decoration: none;
+}
+
+.card h3 a:hover { text-decoration: underline; }
+
+.card .meta {
+  margin-bottom: 8px;
+  color: #9aa5b5;
+  font-size: .92rem;
+}
+
+.card p { margin: 0 0 6px; }
+
+.card .more {
+  display: inline-block;
+  margin-top: 6px;
+  color: #9ccbff;
+  text-decoration: none;
+}
+.card .more:hover { text-decoration: underline; }
