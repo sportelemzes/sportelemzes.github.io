@@ -1,99 +1,118 @@
-// Közös formázók és apró helper függvények – a stats/index/post oldalakon használjuk.
+/* assets/site.js
+ * - Főoldal: friss elemzések listája
+ * - Lábléc évszám (#y)
+ * - Menü aktív link jelölése
+ */
 
-(function(){
-  const yEl = document.getElementById('y');
-  if (yEl) yEl.textContent = new Date().getFullYear();
-})();
+// Kicsi segédek
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
 
-window.__fmt = {
-  // 2025. 08. 25.
-  date(d) {
-    const y=d.getFullYear();
-    const m=('0'+(d.getMonth()+1)).slice(-2);
-    const dd=('0'+d.getDate()).slice(-2);
-    return `${y}. ${m}. ${dd}.`;
-  },
-  // 1 000 → Ft
-  money(n) {
-    const s = (Math.round(Number(n))||0).toLocaleString('hu-HU');
-    return s;
-  },
-  line(x) {
-    const n = Number(x);
-    if (Number.isInteger(n)) return String(n);
-    return n.toFixed(1);
-  },
-  market(p) {
-    if (p.market === 'h2h') return '1x2';
-    if (p.market === 'totals') return `o/u ${this.line(p.line)}`;
-    if (p.market === 'asian_handicap') return `AH ${this.line(p.line)}`;
-    return p.market || '';
-  },
-  // NEW → Newcastle stb. (admin alias-nak is jó)
-  alias(code) {
-    const map = {
-      ARS:'Arsenal', CHE:'Chelsea', NEW:'Newcastle', LIV:'Liverpool',
-      MCI:'Manchester City', MUN:'Manchester United', TOT:'Tottenham',
-      WHU:'West Ham', WOL:'Wolves', AVL:'Aston Villa', BHA:'Brighton',
-      LEE:'Leeds', CRY:'Crystal Palace', FUL:'Fulham', BRE:'Brentford'
-    };
-    return map[(code||'').toUpperCase()] || code;
-  }
-};
-/* ===== Odds-szinkron a posts oldalon a /data/picks.json alapján ===== */
-(function oddsSyncFromPicks(){
-  const cards = document.querySelectorAll('.pick-card[data-event-id]');
-  if (!cards.length) return;
+function safe(text) {
+  if (text == null) return '';
+  return String(text)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
 
-  // poszt oldali market normalizálás
-  const normalizeWant = (m) => {
-    m = (m || '').toLowerCase().trim();
-    if (['asian_0','dnb','ah0','ah-0','ah 0'].includes(m)) return 'ah_0';
-    return m;
-  };
+async function fetchJSON(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`${url} → ${r.status}`);
+  return r.json();
+}
 
-  // picks.json market normalizálás
-  const normalizePick = (p) => {
-    // p.market, p.line -> rövid kulcs
-    let mk = (p.market || '').toLowerCase().trim();
-    const ln = (typeof p.line === 'number' ? p.line : parseFloat(p.line));
-
-    // pénzvonal / 1x2
-    if (mk === 'moneyline' || mk === 'h2h') mk = 'h2h';
-
-    // totals (összgól) -> totals_2.5
-    if (mk === 'totals' && isFinite(ln)) mk = `totals_${ln}`;
-
-    // asian handicap -> ah_0, ah_-0.25 stb. (nekünk most 0.0 kell)
-    if (mk === 'asian_handicap' || mk === 'asian handicap') {
-      if (isFinite(ln) && Math.abs(ln) < 1e-9) mk = 'ah_0';
-      else mk = `ah_${ln}`;
+// dátum kinyerése (post.date vagy slug eleje: YYYY-MM-DD)
+function toDateFromPost(p) {
+  try {
+    if (p.date) return new Date(p.date);
+    if (p.slug) {
+      const parts = p.slug.split('-').slice(0, 3); // ["2025","08","26",...]
+      if (parts.length === 3) {
+        return new Date(parts.join('-'));
+      }
     }
+  } catch (_) {}
+  return new Date(0); // fallback: nagyon régi
+}
 
-    return mk;
-  };
+function prettyDate(d) {
+  try {
+    return d.toLocaleDateString('hu-HU', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  } catch (_) {
+    return '';
+  }
+}
 
-  fetch('/data/picks.json', { cache: 'no-store' })
-    .then(r => r.json())
-    .then(rows => {
-      cards.forEach(card => {
-        const ev  = (card.dataset.eventId || '').trim();
-        const sel = (card.dataset.selection || '').toLowerCase().trim();
-        const wantM = normalizeWant(card.dataset.market || '');
+// FŐOLDAL – feed kirajzolása
+async function renderFeed() {
+  const listEl = $('#list');
+  if (!listEl) return; // nem a főoldal
 
-        const row = rows.find(p => {
-          const pEv  = (p.eventId || '').trim();
-          const pSel = (p.selection || '').toLowerCase().trim();
-          const pMk  = normalizePick(p);
-          return pEv === ev && pSel === sel && pMk === wantM;
-        });
+  // a lista elemet feed osztállyal érdemes ellátni a jobb térköz miatt (CSS)
+  if (!listEl.classList.contains('feed')) listEl.classList.add('feed');
 
-        const out = card.querySelector('.odds-value');
-        if (row && out) {
-          const val = isFinite(row.odds) ? Number(row.odds).toFixed(2) : (row.odds || '');
-          out.textContent = val;
-        }
-      });
-    })
-    .catch(console.warn);
-})();
+  try {
+    const posts = await fetchJSON('posts/index.json');
+
+    // Legújabb felül
+    posts.sort((a, b) => toDateFromPost(b) - toDateFromPost(a));
+
+    const html = posts.map(p => {
+      const d = toDateFromPost(p);
+      const when = prettyDate(d);
+      const league = p.league || '';
+      const sport = p.sport || 'Foci';
+      const excerpt = p.excerpt || '';
+
+      return `
+        <article class="card">
+          <h3><a href="posts/${safe(p.slug)}.html">${safe(p.title || p.slug)}</a></h3>
+          <div class="meta">${safe(when)} • ${safe(league)} / ${safe(sport)}</div>
+          <p>${safe(excerpt)}</p>
+          <p><a class="more" href="posts/${safe(p.slug)}.html">Tovább →</a></p>
+        </article>
+      `;
+    }).join('');
+
+    listEl.innerHTML = html || `<p>Jelenleg még nincs megjeleníthető elemzés.</p>`;
+  } catch (err) {
+    console.error('Feed betöltési hiba:', err);
+    listEl.innerHTML = `<p>Nem sikerült betölteni a listát.</p>`;
+  }
+}
+
+// Menü aktív link jelölése
+function markActiveNav() {
+  const path = location.pathname.replace(/\/+$/, ''); // trailing slash off
+  const links = $$('#header .links a, header .links a, nav .links a, .links a');
+  links.forEach(a => {
+    const href = a.getAttribute('href') || '';
+    // relatív link összehasonlítás
+    const resolved = new URL(href, location.origin).pathname.replace(/\/+$/, '');
+    if (resolved === path) {
+      a.classList.add('active');
+    } else {
+      a.classList.remove('active');
+    }
+  });
+}
+
+// Lábléc évszám
+function setFooterYear() {
+  const y = $('#y');
+  if (y) y.textContent = new Date().getFullYear();
+}
+
+// DOM betöltés után futtatjuk
+document.addEventListener('DOMContentLoaded', () => {
+  setFooterYear();
+  markActiveNav();
+  renderFeed();
+});
