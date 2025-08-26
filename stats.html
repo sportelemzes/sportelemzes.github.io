@@ -3,130 +3,192 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Statisztika – SportElemzés</title>
+  <title>Statisztika</title>
   <link rel="stylesheet" href="/assets/style.css" />
-  <style>
-    .card { background:#121212;border:1px solid #2a2a2a;border-radius:14px;padding:18px; }
-    table.stats{ width:100%; border-collapse:collapse; margin-top:12px }
-    table.stats th, table.stats td{ padding:10px 12px; border-bottom:1px solid #262626; text-align:left; }
-    table.stats th{ color:#cfcfcf; font-weight:700; letter-spacing:.03em; font-size:13px; }
-    table.stats td{ color:#e8e8e8; font-size:14px; }
-    .num{ text-align:right; font-variant-numeric:tabular-nums; }
-    .pill{ display:inline-block; background:#222; border:1px solid #333; padding:.15rem .5rem; border-radius:999px; font-size:12px; color:#ddd }
-    .ok{ color:#43d17c } .bad{ color:#ff6b6b }
-  </style>
 </head>
 <body>
-<header class="header-hero">
-  <nav class="hero-nav">
-    <a class="brand" href="/"><span>SportElemzés</span></a>
+  <header class="header-hero">
+    <nav class="hero-nav">
+      <a class="brand" href="/"><span>SportElemzés</span></a>
+      <div class="links">
+        <a href="/">Elemzések</a>
+        <a class="active" href="/stats.html">Statisztika</a>
+      </div>
+    </nav>
+    <div class="hero-inner">
+      <h1>Statisztika</h1>
+      <p>Havi P/L, tippek és eredmények</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Havi P/L és tippek</h2>
+      <p class="muted" id="pl-note">Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.</p>
+
+      <div class="table-wrap">
+        <table class="table" id="tips">
+          <thead>
+          <tr>
+            <th>Dátum</th>
+            <th>Meccs</th>
+            <th>Piac</th>
+            <th>Tipp</th>
+            <th>Odds</th>
+            <th>Tét</th>
+            <th>Eredmény</th>
+            <th>Profit</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <p class="muted" id="err" style="display:none;"></p>
+    </section>
+  </main>
+
+  <footer class="muted" style="text-align:center;padding:24px 0">
     <div class="links">
       <a href="/">Elemzések</a>
-      <a class="active" href="/stats.html">Statisztika</a>
+      <a href="/stats.html">Statisztika</a>
+      <a href="/privacy.html">Adatkezelés</a>
     </div>
-  </nav>
-  <div class="hero-inner">
-    <h1>Statisztika</h1>
-    <p class="muted">Havi P/L, tippek és eredmények</p>
-  </div>
-</header>
+    <div>© <span id="y"></span> SportElemzés • GitHub Pages</div>
+  </footer>
 
-<main class="main">
-  <section class="card">
-    <h2>Havi P/L és tippek</h2>
-    <p class="muted" id="plNote">Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.</p>
+  <script>
+    // év a láblécben
+    document.getElementById('y').textContent = new Date().getFullYear();
 
-    <h3 style="margin-top:12px">Tippek</h3>
-    <table class="stats" id="tab">
-      <thead>
-        <tr>
-          <th>Dátum</th>
-          <th>Meccs</th>
-          <th>Piac</th>
-          <th>Tipp</th>
-          <th class="num">Odds</th>
-          <th class="num">Tét</th>
-          <th>Eredmény</th>
-          <th class="num">Profit</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </section>
-</main>
-
-<footer class="muted" style="text-align:center;padding:24px 0">
- <div class="links">
-   <a href="/">Elemzések</a>
-   <a href="/stats.html">Statisztika</a>
-   <a href="/privacy.html">Adatkezelés</a>
- </div>
- <div style="margin-top:8px">© <span id="y"></span> SportElemzés • GitHub Pages</div>
-</footer>
-
-<script src="/assets/site.js" defer></script>
-<script>
-(async () => {
-  const rows = document.getElementById('rows');
-  const fmt = window.__fmt;
-
-  try {
-    const r = await fetch('/data/picks.json?ts='+Date.now());
-    if (!r.ok) throw new Error('picks.json not found');
-    const picks = await r.json();
-
-    // csak rendezett lista (legújabb fent)
-    picks.sort((a,b)=> (b.kickoff||'').localeCompare(a.kickoff||''));
-
-    const tr = s => {
-      const el = document.createElement('tr');
-      el.innerHTML = s;
-      rows.appendChild(el);
+    const $ = (s) => document.querySelector(s);
+    const fmt = d => {
+      try {
+        return new Date(d).toLocaleDateString('hu-HU', { year:'numeric', month:'2-digit', day:'2-digit' });
+      } catch(e) { return d || ''; }
     };
 
-    for (const p of picks) {
-      const d = p.kickoff ? new Date(p.kickoff) : null;
-      const date = d ? fmt.date(d) : '';
+    // 3 betűs kód -> csapatnév (bővíthető)
+    const TEAM = {
+      ARS:'Arsenal', CHE:'Chelsea', NEW:'Newcastle', LIV:'Liverpool',
+      MCI:'Man City', MUN:'Man United', TOT:'Tottenham', WHU:'West Ham',
+      LEI:'Leicester', AVA:'Aston Villa', AVL:'Aston Villa', CRY:'Crystal Palace',
+      LEEDS:'Leeds', BRI:'Brighton', WOL:'Wolves', EVE:'Everton'
+    };
 
-      // Emberi meccsnév
-      let match = '';
-      if (p.home && p.away) match = `${p.home} – ${p.away}`;
-      else if (p.eventId && p.eventId.includes('-')) {
-        const [h,a]=p.eventId.split('-');
-        match = fmt.alias(h)+' – '+fmt.alias(a);
-      } else match = p.eventId || '';
-
-      // Piac
-      let market = fmt.market(p);
-
-      // Tipp cimke
-      const tip = p.selection + (p.line!=null && p.market!=='h2h' ? ` ${fmt.line(p.line)}` : '');
-
-      // Profit színezés
-      let prof = p.profit==null ? '—' : fmt.money(p.profit);
-      if (p.profit>0) prof = `<span class="ok">${prof}</span>`;
-      if (p.profit<0) prof = `<span class="bad">${prof}</span>`;
-
-      tr(`
-        <td>${date}</td>
-        <td>${match}</td>
-        <td><span class="pill">${market}</span></td>
-        <td>${tip}</td>
-        <td class="num">${p.odds? Number(p.odds).toFixed(2) : '—'}</td>
-        <td class="num">${fmt.money(p.stake||0)}</td>
-        <td>${p.status || 'open'}</td>
-        <td class="num">${prof}</td>
-      `);
+    function prettyMatch(eventId) {
+      if (!eventId) return '';
+      const p = (eventId + '').split('-').map(x => x.trim());
+      if (p.length !== 2) return eventId;
+      const home = TEAM[p[0]] || p[0];
+      const away = TEAM[p[1]] || p[1];
+      return `${home} – ${away}`;
     }
 
-    if (picks.some(p=>p.status!=='open')) {
-      document.getElementById('plNote').textContent =
-        'A grafikon az első lezárt tipp után jelenik meg. (Később ide jön egy kumulált P/L oszlopdiagram.)';
+    // Piac/Tippek formázása – alias tábla NÉLKÜL, biztonságosan
+    function prettyMarket(p) {
+      const m = (p?.market || '').toLowerCase();
+      const line = p?.line ?? '';
+      if (m === 'h2h')       return 'h2h';
+      if (m === 'ah' || m === 'asian' || m === 'asian_handicap' || m === 'ah_0') {
+        // ha nincs line, 0.0-t írunk
+        const l = (line === '' || line === null || line === undefined) ? '0.0' : line;
+        return `AH ${l}`;
+      }
+      if (m === 'totals' || m === 'ou' || m === 'over_under') {
+        return line !== '' ? `o/u ${line}` : 'o/u';
+      }
+      // ha nem ismerjük
+      return p?.market || '';
     }
-  } catch (e) {
-    rows.innerHTML = `<tr><td colspan="8">Nem sikerült betölteni a tippeket. (${e.message})</td></tr>`;
-  }
-})();
-</script>
+
+    function prettyTip(p) {
+      const m = (p?.market || '').toLowerCase();
+      const s = (p?.selection || '').toLowerCase();
+      const line = p?.line ?? '';
+
+      if (m === 'h2h') {
+        if (s === 'home') return 'home';
+        if (s === 'away') return 'away';
+        if (s === 'draw') return 'draw';
+      }
+      if (m === 'ah' || m === 'asian' || m === 'asian_handicap' || m === 'ah_0') {
+        if (s === 'home' || s === 'away') return s;
+      }
+      if (m === 'totals' || m === 'ou' || m === 'over_under') {
+        if (s === 'over' || s === 'under') return s;
+        // ha véletlenül üres a selection, próbáljuk kitalálni: pozitív line -> over
+        if (!s && (typeof line === 'number' || (typeof line === 'string' && line))) {
+          return 'over/under';
+        }
+      }
+      return s || '';
+    }
+
+    // Eredmény/Profit formázása
+    function prettyResult(p) {
+      const st = (p?.status || '').toLowerCase();
+      if (st === 'open' || st === '') return 'open';
+      // várható értékek: won/lost/push/void/half_won/half_lost
+      return st;
+    }
+
+    function prettyProfit(p) {
+      if (typeof p?.profit === 'number') {
+        return p.profit.toFixed(2);
+      }
+      return '—';
+    }
+
+    async function load() {
+      const $tbody = $('#tips tbody');
+      const $err   = $('#err');
+
+      try {
+        const res = await fetch('/data/picks.json', { cache:'no-store' });
+        const arr = await res.json();
+
+        // üres tábla előkészítés
+        $tbody.innerHTML = '';
+
+        if (!Array.isArray(arr) || !arr.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 8;
+          td.className = 'muted';
+          td.textContent = 'Még nincs rögzített tipp.';
+          tr.appendChild(td);
+          $tbody.appendChild(tr);
+          return;
+        }
+
+        // időrend (legutóbbi felül)
+        arr.sort((a,b) => new Date(b.commence_time) - new Date(a.commence_time));
+
+        for (const p of arr) {
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+            <td>${fmt(p.commence_time)}</td>
+            <td>${prettyMatch(p.eventId)}</td>
+            <td>${prettyMarket(p)}</td>
+            <td>${prettyTip(p)}</td>
+            <td>${(typeof p.odds === 'number' ? p.odds.toFixed(2) : (p.odds || ''))}</td>
+            <td>${p.stake ?? ''}</td>
+            <td>${prettyResult(p)}</td>
+            <td>${prettyProfit(p)}</td>
+          `;
+
+          $tbody.appendChild(tr);
+        }
+      } catch (e) {
+        console.error(e);
+        $err.style.display = '';
+        $err.textContent = 'Nem sikerült betölteni a tippeket. (' + (e?.message || e) + ')';
+      }
+    }
+
+    load();
+  </script>
 </body>
 </html>
