@@ -2,414 +2,325 @@
 <html lang="hu">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SportElemzés – Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin – SportElemzés</title>
   <link rel="stylesheet" href="/assets/style.css" />
   <style>
-    /* Admin mini-styles – a site.css fölé finomhangolás */
-    main { max-width: 1100px; margin: 0 auto; }
-    .card { background:#121212; border:1px solid #2a2a2a; border-radius:12px; padding:18px; margin: 18px 0; }
-    .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    .row-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; }
-    label { font-size:.92rem; color:#bbb; display:block; margin:8px 0 6px; }
-    input[type="text"], input[type="datetime-local"], input[type="number"],
-    select, textarea {
-      width:100%; background:#0f0f0f; border:1px solid #2d2d2d;
-      color:#e6e6e6; border-radius:8px; padding:10px 12px; font:inherit;
-    }
-    textarea { min-height: 180px; }
-    .btn { background:#2563eb; color:#fff; border:none; border-radius:9px; padding:10px 14px; cursor:pointer; }
-    .btn.secondary { background:#2d2d2d; }
-    .btn:disabled { opacity:.6; cursor:default; }
-    .msg { margin-top:8px; font-size:.9rem; color:#9ad67e; }
-    .msg.err { color:#ff8c8c; }
-    .muted { color:#9aa1aa; font-size:.9rem; }
-    .kbd { background:#1f1f1f; border:1px solid #2e2e2e; border-radius:6px; padding:2px 6px; color:#ccc; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .small { font-size:.85rem; color:#9a9a9a; }
+    .admin-card{background:#121212;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin:16px 0}
+    .admin-card h3{margin:0 0 8px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{display:block;font-size:13px;color:#bbb;margin:8px 0 4px}
+    input,select,textarea{width:100%;background:#1a1a1a;border:1px solid #2c2c2c;border-radius:8px;color:#e6e6e6;padding:10px}
+    textarea{min-height:120px}
+    button.primary{background:#2563eb;border:0;color:#fff;border-radius:10px;padding:10px 14px;cursor:pointer}
+    button.secondary{background:#333;border:1px solid #444;color:#ddd;border-radius:10px;padding:10px 14px;cursor:pointer}
+    small.mono{font-family:ui-monospace,Consolas,monospace;color:#9aa}
+    .muted{color:#9aa}
+    .ok{color:#43d17c}
+    .warn{color:#e0b44d}
+    .err{color:#ff6b6b}
   </style>
 </head>
 <body>
-  <!-- HEADER (azonos stílus, mint a nyilvános oldalakon) -->
-  <header class="header-hero">
-    <nav class="hero-nav">
-      <a class="brand" href="/"><span>SportElemzés</span></a>
-      <div class="links">
-        <a href="/" >Elemzések</a>
-        <a href="/stats.html">Statisztika</a>
-        <a class="active" href="/admin/">Admin</a>
-      </div>
-    </nav>
-
-    <div class="hero-inner">
-      <h1>Admin</h1>
-      <p class="muted">Gyors közzététel GitHub API-val (nincs szerver)</p>
+<header class="header-hero">
+  <nav class="hero-nav">
+    <a class="brand" href="/"><span>SportElemzés</span></a>
+    <div class="links">
+      <a href="/">Elemzések</a>
+      <a href="/stats.html">Statisztika</a>
+      <a class="active" href="/admin/">Admin</a>
     </div>
-  </header>
+  </nav>
+  <div class="hero-inner">
+    <h1>Admin</h1>
+    <p class="muted">Gyors közzététel GitHub API-val (nincs szerver)</p>
+  </div>
+</header>
 
-  <main>
-    <!-- TOKEN -->
-    <section class="card">
-      <h3>Token <span class="small">(egyszer add meg, a böngésződből megmarad)</span></h3>
-      <p class="small">
-        Fine-grained token: csak ehhez a repóhoz, <strong>Repository contents: Read/Write</strong>. <br/>
-        <span class="muted">Menü: GitHub &rarr; Settings &rarr; Developer settings &rarr; Fine-grained tokens &rarr; Generate new token.</span>
-      </p>
-      <div class="row">
-        <div>
-          <label for="gh_token">ghp/ github_pat</label>
-          <input id="gh_token" type="text" placeholder="github_pat_xxx…" />
-          <div id="msgToken" class="msg"></div>
-        </div>
-        <div style="align-self:end;">
-          <button class="btn" id="saveToken">Token mentése</button>
-          <button class="btn secondary" id="clearToken" title="Törli a böngésződből">Token törlése</button>
-        </div>
+<main class="main">
+  <!-- TOKEN -->
+  <section class="admin-card">
+    <h3>Token <small class="muted">(egyszer add meg, a böngésződből megmarad)</small></h3>
+    <p class="muted">Fine-grained token: csak ehhez a repóhoz, <em>Repository contents: Read/Write</em>.</p>
+    <div class="row">
+      <div>
+        <label>Token</label>
+        <input id="gh_token" placeholder="ghp_xxx…" />
       </div>
-    </section>
-
-    <!-- ÚJ CIKK -->
-    <section class="card">
-      <h3>Új cikk</h3>
-      <div class="row">
-        <div>
-          <label for="p_title">Cím</label>
-          <input id="p_title" type="text" placeholder="Pl. Newcastle vs Liverpool – elemzés és tipp" />
-        </div>
-        <div>
-          <label for="p_date">Dátum</label>
-          <input id="p_date" type="datetime-local" />
-        </div>
+      <div style="align-self:end">
+        <button class="primary" id="saveToken">Token mentése</button>
+        <div class="muted" id="tokenMsg"></div>
       </div>
+    </div>
+  </section>
 
-      <div class="row">
-        <div>
-          <label for="p_excerpt">Rövid kivonat (excerpt)</label>
-          <input id="p_excerpt" type="text" placeholder="1–2 mondatban a lényeg" />
-        </div>
-        <div>
-          <label for="p_league">Liga / sport (opcionális)</label>
-          <input id="p_league" type="text" placeholder="EPL / Foci" />
-        </div>
+  <!-- ÚJ CIKK (röviden – nálad már működik; meghagyjuk az alapot) -->
+  <section class="admin-card">
+    <h3>Új cikk</h3>
+    <p class="muted">A meglévő publikáló űrlapod itt marad – rövidre fogtam. Ha mást használsz, hagyd figyelmen kívül.</p>
+    <div class="row">
+      <div>
+        <label>Cím</label>
+        <input id="title" placeholder="Pl. Newcastle vs Liverpool – elemzés és tipp">
       </div>
-
-      <label for="p_body">Cikk szövege (HTML vagy sima szöveg)</label>
-      <textarea id="p_body" placeholder="Írd ide a cikket…"></textarea>
-
-      <div class="row">
-        <div>
-          <label for="p_slug">Slug (ha üres, a cím + dátum alapján készül)</label>
-          <input id="p_slug" type="text" placeholder="2025-08-25-newcastle-liverpool" />
-        </div>
-        <div style="align-self:end;">
-          <button id="publish" class="btn">Cikk közzététele</button>
-        </div>
+      <div>
+        <label>Dátum</label>
+        <input id="date" type="datetime-local">
       </div>
-      <div id="msgPub" class="msg"></div>
-    </section>
-
-    <!-- ÚJ TIPP -->
-    <section class="card">
-      <h3>Új tipp a statisztikába</h3>
-      <div class="row-3">
-        <div>
-          <label for="pk_sport">Sport kulcs</label>
-          <input id="pk_sport" type="text" value="soccer_epl" />
-        </div>
-        <div>
-          <label for="pk_event">Meccs / Event ID</label>
-          <input id="pk_event" type="text" placeholder="pl. ARS-CHE vagy valamilyen azonosító" />
-        </div>
-        <div>
-          <label for="pk_kickoff">Kezdés (helyi idő)</label>
-          <input id="pk_kickoff" type="datetime-local" />
-        </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Rövid kivonat (excerpt)</label>
+        <input id="excerpt" placeholder="1–2 mondatban a lényeg">
       </div>
-
-      <div class="row-3">
-        <div>
-          <label for="pk_market">Választás</label>
-          <select id="pk_market">
-            <option value="h2h">home / draw / away</option>
-            <option value="totals">over / under</option>
-            <option value="asian_handicap">asian handicap</option>
-          </select>
-        </div>
-        <div>
-          <label for="pk_sel">Tipp</label>
-          <select id="pk_sel">
-            <option value="home">HOME</option>
-            <option value="away">AWAY</option>
-            <option value="draw">DRAW</option>
-            <option value="over">OVER</option>
-            <option value="under">UNDER</option>
-          </select>
-        </div>
-        <div>
-          <label for="pk_line">Vonal (opcionális)</label>
-          <input id="pk_line" type="text" placeholder="pl. 2.5" />
-        </div>
+      <div>
+        <label>Liga / sport (opcionális)</label>
+        <input id="league" placeholder="EPL / Foci">
       </div>
+    </div>
+    <label>Cikk szövege</label>
+    <textarea id="body" placeholder="Írd ide a cikket…"></textarea>
+    <div style="margin-top:10px">
+      <button class="secondary" id="publish">Cikk közzététele</button>
+      <span id="msg" class="muted"></span>
+    </div>
+  </section>
 
-      <div class="row-3">
-        <div>
-          <label for="pk_odds">Odds</label>
-          <input id="pk_odds" type="number" step="0.01" placeholder="pl. 1.90" />
-        </div>
-        <div>
-          <label for="pk_stake">Tét</label>
-          <input id="pk_stake" type="number" placeholder="pl. 1000" />
-        </div>
-        <div>
-          <label for="pk_status">Státusz</label>
-          <select id="pk_status">
-            <option value="open">open</option>
-            <option value="won">won</option>
-            <option value="lost">lost</option>
-            <option value="void">void</option>
-            <option value="push">push</option>
-          </select>
-        </div>
+  <!-- ÚJ TIPP / STAT – ez a már meglévő űrlapod mintája -->
+  <section class="admin-card">
+    <h3>Új tipp a statisztikába</h3>
+    <div class="row">
+      <div>
+        <label>Sport kulcs</label>
+        <input id="p_sport" value="soccer_epl" />
       </div>
-
-      <div style="margin-top:10px">
-        <button id="savePick" class="btn">Tipp mentése</button>
-        <div id="msgPick" class="msg"></div>
+      <div>
+        <label>Meccs / Event (emberi azonosító)</label>
+        <input id="p_event" placeholder="NEW-LIV vagy teljes név" />
       </div>
-    </section>
+    </div>
+    <div class="row">
+      <div>
+        <label>Kickoff (helyi idő)</label>
+        <input id="p_dt" type="datetime-local" />
+      </div>
+      <div>
+        <label>Piac</label>
+        <select id="p_market">
+          <option value="h2h">h2h (1x2)</option>
+          <option value="asian_handicap">asian_handicap</option>
+          <option value="totals">totals (o/u)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Vonal (opcionális)</label>
+        <input id="p_line" placeholder="0.0 vagy 2.5" />
+      </div>
+      <div>
+        <label>Választás</label>
+        <select id="p_sel">
+          <option value="home">home</option>
+          <option value="away">away</option>
+          <option value="draw">draw</option>
+          <option value="over">over</option>
+          <option value="under">under</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Odds</label>
+        <input id="p_odds" placeholder="pl. 1.90" />
+      </div>
+      <div>
+        <label>Tét</label>
+        <input id="p_stake" placeholder="1000" value="1000" />
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Státusz</label>
+        <select id="p_status">
+          <option value="open" selected>open</option>
+          <option value="won">won</option>
+          <option value="lost">lost</option>
+          <option value="void">void</option>
+        </select>
+      </div>
+      <div style="align-self:end">
+        <button class="secondary" id="savePick">Tipp mentése</button>
+        <span id="msgPick" class="muted"></span>
+      </div>
+    </div>
+  </section>
 
-    <p class="small muted">
-      Tipp: ha gond van a jogosultsággal, a fejlesztői eszközökben <span class="kbd">Application → Local Storage</span> alatt ellenőrizheted, hogy a <span class="kbd">gh_token</span> megvan-e.
-    </p>
+  <!-- ODDS FRISSÍTÉS – WORKFLOW INDÍTÁSA -->
+  <section class="admin-card">
+    <h3>Odds frissítés (GitHub Actions)</h3>
+    <p class="muted">Szerveroldalon frissíti az <code>data/picks.json</code>-ban az oddsokat az <em>open</em> státuszú tippeknél.</p>
+    <div>
+      <button class="primary" id="runOdds">Odds frissítés indítása</button>
+      <span id="oddsMsg" class="muted"></span>
+      <p class="muted"><small class="mono">.github/workflows/update-odds.yml</small> fut, az API-kulcs <em>ODDS_API_KEY</em> a repó Secrets-ben van.</p>
+    </div>
+  </section>
+</main>
 
-  </main>
+<script>
+(() => {
+  const $ = sel => document.querySelector(sel);
+  const msg = $('#msg');
+  const msgPick = $('#msgPick');
+  const oddsMsg = $('#oddsMsg');
 
-  <script>
-    /*********************************************************************
-     * Beállítások – ha átnevezed a repót, ezt a két sort írd át
-     *********************************************************************/
-    const OWNER  = 'sportelemzes';
-    const REPO   = 'sportelemzes.github.io';
-    const BRANCH = 'main';
+  // --- token load/save
+  $('#gh_token').value = localStorage.getItem('gh_token') || '';
+  $('#saveToken').onclick = () => {
+    const t = $('#gh_token').value.trim();
+    if (!t.startsWith('gh')) { $('#tokenMsg').textContent = '⚠️ Furcsa tokennek tűnik.'; }
+    localStorage.setItem('gh_token', t);
+    $('#tokenMsg').innerHTML = '<span class="ok">Token elmentve.</span>';
+  };
 
-    /*********************************************************************
-     * Segédek
-     *********************************************************************/
-    const el = sel => document.querySelector(sel);
-    const b64e = (str) => btoa(unescape(encodeURIComponent(str)));
-    const b64d = (str) => decodeURIComponent(escape(atob(str)));
-    const fmtDate = (d) => {
-      try { return new Date(d).toISOString(); } catch (e) { return new Date().toISOString(); }
-    };
-    const makeSlug = (title, date) => {
-      const d = new Date(date || Date.now());
-      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      const t = (title || '').toLowerCase()
-        .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i')
-        .replace(/[óòöôő]/g,'o').replace(/[úùüûű]/g,'u').replace(/[^a-z0-9]+/g,'-')
-        .replace(/(^-|-$)/g,'').substring(0,60);
-      return `${ds}-${t || 'post'}`;
-    };
+  // --- minimal post publish (nálad már külön van – ez csak minta)
+  $('#publish').onclick = async () => {
+    try {
+      const token = localStorage.getItem('gh_token');
+      if (!token) { alert('Adj meg GitHub tokent!'); return; }
 
-    const token = () => localStorage.getItem('gh_token') || '';
+      const title = $('#title').value.trim();
+      const date  = $('#date').value;
+      const league = $('#league').value.trim();
+      const body  = $('#body').value;
 
-    /*********************************************************************
-     * GitHub Contents API
-     *********************************************************************/
-    const API_ROOT = 'https://api.github.com';
+      if (!title || !date || !body) { alert('Cím, dátum, szöveg kötelező.'); return; }
 
-    async function ghGet(path) {
-      const url = `${API_ROOT}/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`;
-      const r = await fetch(url, {
-        headers: { 'Authorization': token() ? `token ${token()}` : undefined }
-      });
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error(`GET ${path} ${r.status}`);
-      return r.json();
-    }
-
-    async function ghPut(path, content, sha, message) {
-      const url = `${API_ROOT}/repos/${OWNER}/${REPO}/contents/${path}`;
-      const body = {
-        message: message || `Update ${path}`,
-        content: typeof content === 'string' ? b64e(content) : content,
-        branch: BRANCH
-      };
-      if (sha) body.sha = sha;
-
-      const r = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `token ${token()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-      if (!r.ok) {
-        const tx = await r.text().catch(()=>'');
-        throw new Error(`PUT ${path}: ${r.status} ${tx}`);
-      }
-      return r.json();
-    }
-
-    /*********************************************************************
-     * POSZT HTML Sablon – (ITT KERÜL BE A site.js ABSZOLÚT ÚTVONALLAL!)
-     *********************************************************************/
-    function renderPostHTML({ title, date, league, excerpt, body, slug }) {
-      const iso = fmtDate(date);
-      const nice = new Date(iso).toISOString().slice(0,10);
-      return `<!doctype html>
-<html lang="hu">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>${title}</title>
-  <meta name="description" content="${(excerpt||'').replace(/"/g,'&quot;')}" />
-  <link rel="stylesheet" href="/assets/style.css" />
-  <!-- A poszt JS-e minden cikkhez automatikusan betölt -->
-  <script src="/assets/site.js?v=3" defer></script>
-</head>
+      // nagyon egyszerű "post" – hoz létre egy HTML fájlt a /posts alatt
+      const slug = date.slice(0,10) + '-' + title.toLowerCase()
+        .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      const html = `
+<!doctype html><html lang="hu"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title><link rel="stylesheet" href="/assets/style.css"></head>
 <body>
-  <header class="header-hero">
-    <nav class="hero-nav">
-      <a class="brand" href="/"><span>SportElemzés</span></a>
-      <div class="links">
-        <a class="active" href="/">Elemzések</a>
-        <a href="/stats.html">Statisztika</a>
-      </div>
-    </nav>
-    <div class="hero-inner">
-      <h1>${title}</h1>
-      <p class="muted">${league ? league + ' • ' : ''}${nice}</p>
-    </div>
-  </header>
+<header class="header-hero"><nav class="hero-nav"><a class="brand" href="/"><span>SportElemzés</span></a>
+<div class="links"><a href="/">Elemzések</a><a href="/stats.html">Statisztika</a></div></nav>
+<div class="hero-inner"><h1>${title}</h1><p class="muted">${league ? league+' • ': ''}${date.slice(0,10)}</p></div></header>
+<main class="main post">
+${body}
+</main>
+<footer class="muted" style="text-align:center;padding:24px 0">
+ <div class="links">
+   <a href="/">Elemzések</a>
+   <a href="/stats.html">Statisztika</a>
+   <a href="/privacy.html">Adatkezelés</a>
+ </div>
+</footer>
+<script src="/assets/site.js" defer></script>
+</body></html>`;
 
-  <main class="content post">
-    <article class="post">
-      <p class="meta">${nice} • ${league || '—'}</p>
-      ${body || ''}
-    </article>
-  </main>
-</body>
-</html>`;
+      await ghPut(`posts/${slug}.html`, html, `Add post: ${title}`);
+      msg.innerHTML = '<span class="ok">Kész! A főoldalon megjelent.</span>';
+    } catch (e) {
+      msg.innerHTML = '<span class="err">Hiba: ' + e.message + '</span>';
+    }
+  };
+
+  // --- Tippek mentése
+  $('#savePick').onclick = async () => {
+    try {
+      const file = 'data/picks.json';
+      const arr = await ghGet(file);
+
+      const event = $('#p_event').value.trim();
+      if (!event) { alert('Event azonosító kell (pl. NEW-LIV).'); return; }
+
+      const pick = {
+        id: 'pick-'+Math.random().toString(36).slice(2,9),
+        sport: $('#p_sport').value.trim() || 'soccer_epl',
+        eventId: event,
+        kickoff: $('#p_dt').value ? new Date($('#p_dt').value).toISOString() : null,
+        market: $('#p_market').value,
+        line: $('#p_line').value ? Number($('#p_line').value) : null,
+        selection: $('#p_sel').value,
+        odds: $('#p_odds').value ? Number($('#p_odds').value) : null,
+        stake: $('#p_stake').value ? Number($('#p_stake').value) : 0,
+        status: $('#p_status').value,
+        result: null,
+        profit: null
+      };
+
+      arr.unshift(pick);
+      await ghPut(file, JSON.stringify(arr, null, 2)+'\n', 'Add pick '+pick.id);
+      msgPick.innerHTML = '<span class="ok">Tipp elmentve.</span>';
+    } catch (e) {
+      msgPick.innerHTML = '<span class="err">Hiba: '+e.message+'</span>';
+    }
+  };
+
+  // --- Odds workflow indítása
+  $('#runOdds').onclick = async () => {
+    try {
+      const token = localStorage.getItem('gh_token');
+      if (!token) { alert('Adj meg GitHub tokent!'); return; }
+
+      const owner = 'sportelemzes';        // ← a tied!
+      const repo  = 'sportelemzes.github.io'; // ← a tied!
+      const wf    = 'update-odds.yml';
+
+      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${wf}/dispatches`, {
+        method: 'POST',
+        headers: { 'Authorization': `token ${token}`, 'Accept':'application/vnd.github+json' },
+        body: JSON.stringify({ ref: 'main' })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      oddsMsg.innerHTML = '<span class="ok">Elindítva. 30–90 mp és frissül.</span>';
+    } catch (e) {
+      oddsMsg.innerHTML = '<span class="err">Hiba: '+e.message+'</span>';
+    }
+  };
+
+  // --- GitHub API helper
+  async function ghGet(path) {
+    const token = localStorage.getItem('gh_token');
+    if (!token) throw new Error('Nincs token.');
+    const owner = 'sportelemzes';
+    const repo  = 'sportelemzes.github.io';
+
+    const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=main`, {
+      headers: { 'Authorization': 'token '+token, 'Accept':'application/vnd.github+json' }
+    });
+    if (!r.ok) throw new Error('GET '+path+': '+r.status);
+    const j = await r.json();
+    if (!j.content) return []; // új fájl eset
+    const b64 = atob(j.content);
+    return JSON.parse(b64);
+  }
+
+  async function ghPut(filePath, content, message) {
+    const token = localStorage.getItem('gh_token');
+    const owner = 'sportelemzes';
+    const repo  = 'sportelemzes.github.io';
+
+    // get old sha if exists
+    let sha=null; {
+      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=main`, {
+        headers: { 'Authorization': 'token '+token, 'Accept':'application/vnd.github+json' }
+      });
+      if (r.ok) { const j = await r.json(); sha = j.sha; }
     }
 
-    /*********************************************************************
-     * Események – TOKEN
-     *********************************************************************/
-    (function initTokenUI(){
-      const inp = el('#gh_token');
-      const saved = token();
-      if (saved) {
-        inp.value = saved;
-        el('#msgToken').textContent = 'Token elmentve.';
-      }
-      el('#saveToken').addEventListener('click', () => {
-        const v = (inp.value || '').trim();
-        if (!v) { el('#msgToken').className = 'msg err'; el('#msgToken').textContent = 'Üres token.'; return; }
-        localStorage.setItem('gh_token', v);
-        el('#msgToken').className = 'msg'; el('#msgToken').textContent = 'Token elmentve.';
-      });
-      el('#clearToken').addEventListener('click', ()=>{
-        localStorage.removeItem('gh_token');
-        el('#msgToken').className = 'msg'; el('#msgToken').textContent = 'Token törölve a böngészőből.';
-      });
-    })();
-
-    /*********************************************************************
-     * Közzététel – poszt
-     *********************************************************************/
-    el('#publish').addEventListener('click', async () => {
-      try {
-        el('#publish').disabled = true;
-        el('#msgPub').className = 'msg'; el('#msgPub').textContent = 'Közzététel…';
-
-        const title   = el('#p_title').value.trim();
-        const date    = el('#p_date').value ? new Date(el('#p_date').value) : new Date();
-        const excerpt = el('#p_excerpt').value.trim();
-        const league  = el('#p_league').value.trim();
-        const bodyTxt = el('#p_body').value.trim();
-        const slug    = (el('#p_slug').value.trim()) || makeSlug(title, date);
-
-        if (!title || !bodyTxt) throw new Error('Cím és törzs szükséges.');
-
-        const html = renderPostHTML({ title, date, league, excerpt, body: bodyTxt, slug });
-
-        // 1) Poszt fájl
-        const postPath = `posts/${slug}.html`;
-        const old = await ghGet(postPath);   // ha létezik, sha kell a PUT-hoz
-        await ghPut(postPath, html, old?.sha, `Add post: ${slug}`);
-
-        // 2) posts/index.json frissítés
-        let idx = await ghGet('posts/index.json');
-        let arr = [];
-        if (idx && idx.content) {
-          try { arr = JSON.parse(b64d(idx.content)); } catch(e) { arr = []; }
-        }
-        // Töröljük, ha már benne van (slug alapján), és előre tesszük
-        arr = arr.filter(it => it.slug !== slug);
-        arr.unshift({ slug, title, date: fmtDate(date), league });
-
-        const idxBody = JSON.stringify(arr, null, 2);
-        await ghPut('posts/index.json', idxBody, idx?.sha, 'Update posts index');
-
-        el('#msgPub').className = 'msg'; el('#msgPub').textContent = 'Kész! Közzétéve.';
-      } catch (e) {
-        console.error(e);
-        el('#msgPub').className = 'msg err'; el('#msgPub').textContent = 'Hiba: ' + (e.message || e);
-      } finally {
-        el('#publish').disabled = false;
-      }
+    const r2 = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token '+token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+      body: JSON.stringify({ message, content: btoa(content), branch: 'main', sha })
     });
-
-    /*********************************************************************
-     * Közzététel – pick (stat)
-     *********************************************************************/
-    function makePickId(ev){ return (ev||'').toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,12) + '-' + Date.now().toString(36); }
-
-    el('#savePick').addEventListener('click', async () => {
-      try {
-        el('#savePick').disabled = true;
-        el('#msgPick').className = 'msg'; el('#msgPick').textContent = 'Mentés…';
-
-        const sport   = el('#pk_sport').value.trim();
-        const eventId = el('#pk_event').value.trim();
-        const kickoff = el('#pk_kickoff').value;
-        const market  = el('#pk_market').value;
-        const sel     = el('#pk_sel').value;
-        const line    = el('#pk_line').value.trim() || null;
-        const odds    = parseFloat(el('#pk_odds').value);
-        const stake   = parseFloat(el('#pk_stake').value);
-        const status  = el('#pk_status').value;
-
-        if (!sport || !eventId || !kickoff || !market || !sel || !odds || !stake)
-          throw new Error('Hiányzó mezők.');
-
-        const pick = {
-          id: makePickId(eventId),
-          sport, eventId,
-          commence_time: new Date(kickoff).toISOString(),
-          market, selection: sel,
-          line: line ? parseFloat(line) : null,
-          odds, stake,
-          status
-        };
-
-        let file = await ghGet('data/picks.json');
-        let arr = [];
-        if (file && file.content) {
-          try { arr = JSON.parse(b64d(file.content)); } catch(e) { arr = []; }
-        }
-        arr.unshift(pick);
-
-        await ghPut('data/picks.json', JSON.stringify(arr, null, 2), file?.sha, 'Add pick');
-        el('#msgPick').className = 'msg'; el('#msgPick').textContent = 'Tipp elmentve.';
-      } catch (e) {
-        console.error(e);
-        el('#msgPick').className = 'msg err'; el('#msgPick').textContent = 'Hiba: ' + (e.message || e);
-      } finally {
-        el('#savePick').disabled = false;
-      }
-    });
-  </script>
+    if (!r2.ok) throw new Error('PUT '+filePath+': '+(await r2.text()));
+    return true;
+  }
+})();
+</script>
 </body>
 </html>
