@@ -193,3 +193,7 @@ footer a{color:#8ac}
 .tip-card.main .title {
   color: #22d3ee;
 }
+/* profit színezés a statisztikán */
+#tips td .win  { color:#92e07c; font-weight:700; }
+#tips td .lost { color:#ff8a8a; font-weight:700; }
+#tips td .void { color:#ddd;    font-weight:600; }
