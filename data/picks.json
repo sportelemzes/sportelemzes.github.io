@@ -1,12 +1,26 @@
-{
-  "id": "nufc-liv-2025-08-25-dnb",
-  "sport": "soccer_epl",
-  "eventId": "NUFC-LIV",
-  "market": "h2h",
-  "selection": "away",        // DNB-hez később tehetsz egy külön "market": "asian_0.0" jelölést is, ha szeretnéd
-  "line": null,
-  "odds": 1.60,
-  "stake": 1000,
-  "commence_time": "2025-08-25T19:00:00Z",
-  "status": "open"
-}
+[
+  {
+    "id": "d0f07775",
+    "sport": "soccer_epl",
+    "eventId": "ARS-CHE",
+    "market": "totals",
+    "selection": "over",
+    "line": 2.5,
+    "odds": 1.90,
+    "stake": 1000,
+    "commence_time": "2025-08-31T18:00:00Z",
+    "status": "open"
+  },
+  {
+    "id": "cc48d321",
+    "sport": "soccer_epl",
+    "eventId": "NEW-LIV",
+    "market": "h2h",
+    "selection": "away",
+    "line": null,
+    "odds": 2.10,
+    "stake": 1000,
+    "commence_time": "2025-08-25T18:00:00Z",
+    "status": "open"
+  }
+]
