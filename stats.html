@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Statisztika • SportElemzés</title>
+  <title>Statisztika | SportElemzés</title>
   <link rel="stylesheet" href="/assets/style.css" />
   <script src="/assets/site.js" defer></script>
 </head>
 <body>
 
-  <!-- HERO / NAV -->
+  <!-- FEJLÉC / HERO -->
   <header class="header-hero">
     <nav class="hero-nav">
       <a class="brand" href="/"><span>SportElemzés</span></a>
@@ -25,16 +25,18 @@
     </div>
   </header>
 
-  <main>
-    <section class="card">
+  <!-- TARTALOM -->
+  <main class="wrap" style="padding: 28px 0 64px;">
+    <section class="card" style="padding: 24px 28px;">
       <h2>Havi P/L és tippek</h2>
 
-      <h3>Havi profit/loss</h3>
-      <p class="muted">Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.</p>
+      <h3 style="margin-top: 24px;">Havi profit/loss</h3>
+      <p id="pl-msg" class="muted">
+        Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.
+      </p>
 
-      <h3 style="margin-top:24px">Tippek</h3>
-
-      <div class="table-wrap">
+      <h3 style="margin-top: 24px;">Tippek</h3>
+      <div class="table-scroll">
         <table id="tips">
           <thead>
             <tr>
@@ -48,20 +50,105 @@
               <th>Profit</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <!-- ide rajzol a script -->
+          </tbody>
         </table>
       </div>
     </section>
   </main>
 
+  <!-- LÁBLÉC -->
   <footer class="muted" style="text-align:center;padding:24px 0">
     <div class="links">
       <a href="/">Elemzések</a>
       <a href="/stats.html">Statisztika</a>
       <a href="/privacy.html">Adatkezelés</a>
     </div>
-    <div style="margin-top:6px">© <span id="y"></span> SportElemzés • GitHub Pages</div>
+    <div style="margin-top:8px">
+      © <span id="y"></span> SportElemzés • GitHub Pages
+    </div>
   </footer>
 
+  <!-- ADATBETÖLTÉS & MEGJELENÍTÉS -->
+  <script>
+  (async () => {
+    // Segéd formázók
+    const fmtDate = iso => {
+      const d = new Date(iso);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${y}. ${m}. ${dd}.`;
+    };
+
+    const fmtMarket = (p) => {
+      // Szép címkék a piachoz
+      if (p.market === 'asian_handicap') {
+        const line = (Number(p.line) || 0).toFixed(1).replace(/\.0$/, '');
+        return `AH ${line}`;
+      }
+      if (p.market === 'totals') return `o/u ${p.line}`;
+      if (p.market === 'h2h')    return `1X2`;
+      return p.market || '';
+    };
+
+    const calcProfit = (p) => {
+      // Ha nincs profit tárolva, státusz alapján kalkulálunk
+      if (typeof p.profit === 'number') return p.profit;
+      if (p.status === 'won')  return Math.round(p.stake * (p.odds - 1));
+      if (p.status === 'lost') return -Number(p.stake || 0);
+      if (p.status === 'push') return 0;
+      return null; // open
+    };
+
+    // Betöltjük a publikált posztokat és a tippeket
+    const [posts, picks] = await Promise.all([
+      fetch('/posts/index.json').then(r => r.json()).catch(() => []),
+      fetch('/data/picks.json').then(r => r.json()).catch(() => [])
+    ]);
+
+    // Csak olyan tippek jelenjenek meg, amelyek publikált poszthoz vannak kötve
+    const allowed = new Set(posts.map(p => p.slug));
+    const rows = picks
+      .filter(p => p.postSlug && allowed.has(p.postSlug))
+      .sort((a, b) => new Date(b.commence_time) - new Date(a.commence_time));
+
+    // Havi P/L (csak lezárt tippek)
+    const today = new Date();
+    const ym = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+    const closedThisMonth = rows.filter(p =>
+      p.status !== 'open' && (p.commence_time || '').startsWith(ym)
+    );
+    const monthlyPL = closedThisMonth.reduce((s, p) => s + (calcProfit(p) ?? 0), 0);
+
+    const plMsg = document.getElementById('pl-msg');
+    if (closedThisMonth.length > 0) {
+      const sign = monthlyPL > 0 ? '+' : '';
+      plMsg.textContent = `Lezárt tippek: ${closedThisMonth.length} • Havi P/L: ${sign}${monthlyPL.toFixed(0)}`;
+    }
+
+    // Táblázat kirajzolása
+    const tbody = document.querySelector('#tips tbody');
+    tbody.innerHTML = rows.map(p => {
+      const profit = calcProfit(p);
+      const odds   = (p.odds ?? '').toFixed ? p.odds.toFixed(2) : p.odds;
+      const profitCell = profit === null ? 'open' : profit.toFixed(0);
+
+      return `
+        <tr>
+          <td>${fmtDate(p.commence_time)}</td>
+          <td>${p.eventName || p.eventId || ''}</td>
+          <td>${fmtMarket(p)}</td>
+          <td>${p.selection || ''}</td>
+          <td>${odds || ''}</td>
+          <td>${p.stake || ''}</td>
+          <td>${p.status || ''}</td>
+          <td>${profitCell}</td>
+        </tr>
+      `;
+    }).join('');
+  })();
+  </script>
 </body>
 </html>
