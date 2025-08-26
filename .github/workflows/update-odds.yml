@@ -1,0 +1,31 @@
+name: Update odds (server side)
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '*/60 * * * *'   # óránként (igény szerint állítható)
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Update odds in data/picks.json
+        run: node scripts/update_odds.mjs
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+
+      - name: Commit & push (if changed)
+        run: |
+          git config user.name "actions-bot"
+          git config user.email "actions@github.com"
+          git add data/picks.json
+          git commit -m "Update odds snapshot" || echo "No changes to commit"
+          git push
