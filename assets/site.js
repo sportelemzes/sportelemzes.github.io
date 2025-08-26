@@ -40,3 +40,60 @@ window.__fmt = {
     return map[(code||'').toUpperCase()] || code;
   }
 };
+/* ===== Odds-szinkron a posts oldalon a /data/picks.json alapján ===== */
+(function oddsSyncFromPicks(){
+  const cards = document.querySelectorAll('.pick-card[data-event-id]');
+  if (!cards.length) return;
+
+  // poszt oldali market normalizálás
+  const normalizeWant = (m) => {
+    m = (m || '').toLowerCase().trim();
+    if (['asian_0','dnb','ah0','ah-0','ah 0'].includes(m)) return 'ah_0';
+    return m;
+  };
+
+  // picks.json market normalizálás
+  const normalizePick = (p) => {
+    // p.market, p.line -> rövid kulcs
+    let mk = (p.market || '').toLowerCase().trim();
+    const ln = (typeof p.line === 'number' ? p.line : parseFloat(p.line));
+
+    // pénzvonal / 1x2
+    if (mk === 'moneyline' || mk === 'h2h') mk = 'h2h';
+
+    // totals (összgól) -> totals_2.5
+    if (mk === 'totals' && isFinite(ln)) mk = `totals_${ln}`;
+
+    // asian handicap -> ah_0, ah_-0.25 stb. (nekünk most 0.0 kell)
+    if (mk === 'asian_handicap' || mk === 'asian handicap') {
+      if (isFinite(ln) && Math.abs(ln) < 1e-9) mk = 'ah_0';
+      else mk = `ah_${ln}`;
+    }
+
+    return mk;
+  };
+
+  fetch('/data/picks.json', { cache: 'no-store' })
+    .then(r => r.json())
+    .then(rows => {
+      cards.forEach(card => {
+        const ev  = (card.dataset.eventId || '').trim();
+        const sel = (card.dataset.selection || '').toLowerCase().trim();
+        const wantM = normalizeWant(card.dataset.market || '');
+
+        const row = rows.find(p => {
+          const pEv  = (p.eventId || '').trim();
+          const pSel = (p.selection || '').toLowerCase().trim();
+          const pMk  = normalizePick(p);
+          return pEv === ev && pSel === sel && pMk === wantM;
+        });
+
+        const out = card.querySelector('.odds-value');
+        if (row && out) {
+          const val = isFinite(row.odds) ? Number(row.odds).toFixed(2) : (row.odds || '');
+          out.textContent = val;
+        }
+      });
+    })
+    .catch(console.warn);
+})();
