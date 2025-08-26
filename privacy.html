@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adatkezelés • SportElemzés</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <style>
+    .legal h3 { margin-top: 20px; }
+    .legal p  { line-height: 1.6; }
+    .legal ul { margin: 8px 0 16px 20px; }
+  </style>
+</head>
+<body>
+<header class="header-hero">
+  <nav class="hero-nav">
+    <a class="brand" href="/"><span>SportElemzés</span></a>
+    <div class="links">
+      <a href="/">Elemzések</a>
+      <a href="/stats.html">Statisztika</a>
+      <a class="active" href="/privacy.html">Adatkezelés</a>
+    </div>
+  </nav>
+  <div class="hero-inner">
+    <h1>Adatkezelés</h1>
+    <p>Összefoglaló arról, hogyan kezeljük a személyes adatokat ezen az oldalon.</p>
+  </div>
+</header>
+
+<main>
+  <section class="card legal">
+    <h2>1) Röviden</h2>
+    <p>
+      Ez egy statikus, GitHub Pages-en hosztolt weboldal. Nem fut szerveroldali
+      alkalmazás, nem gyűjtünk kapcsolatfelvételi űrlapon keresztül adatot,
+      és nem használunk analitikát (pl. Google Analytics).
+    </p>
+
+    <h2>2) Milyen adatokat kezelünk?</h2>
+    <ul>
+      <li><b>Publikus tartalom:</b> az oldalon megjelenő cikkek, tippek és eredmények (nem személyes adat).</li>
+      <li><b>Admin oldal (helyi tároló):</b> az <code>/admin</code> felületen
+        a böngésződ <i>LocalStorage</i>-ában mentjük a GitHub „fine-grained token”-t,
+        kizárólag a saját böngésződben. Ezt a token-t nem küldjük semmilyen saját szerverre.</li>
+    </ul>
+
+    <h2>3) Sütik / cookie-k</h2>
+    <p>
+      Mi nem helyezünk el saját cookie-kat. A tárhelyszolgáltató (GitHub Pages)
+      viszont műszaki okokból naplózhat technikai metaadatokat (IP, böngésző
+      típusa stb.). Erről bővebben a GitHub adatkezelési tájékoztatójában olvashatsz:
+      <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">GitHub Privacy Statement</a>.
+    </p>
+
+    <h2>4) Harmadik felek</h2>
+    <ul>
+      <li><b>GitHub</b> – tárhely és kiszolgálás (GitHub Pages).</li>
+      <li><b>Nincs analitika</b> – sem Google Analytics, sem más statisztika nincs bekötve.</li>
+    </ul>
+
+    <h2>5) Adatmegőrzés</h2>
+    <p>
+      Mivel személyes adatot nem gyűjtünk, adatmegőrzési szabályzatunk csak a
+      publikus tartalomra és a GitHub Pages-re korlátozódik. Az admin token a
+      te böngésződben marad, bármikor törölheted a böngésződ helyi tárolóját
+      („Helyi tároló / LocalStorage”).
+    </p>
+
+    <h2>6) Érintetti jogok</h2>
+    <p>
+      Mivel nem kezelünk személyes adatot, nincs külön törlési, módosítási vagy
+      hordozhatósági folyamat. Ha kérdésed van, írj nekünk:
+      <a href="https://github.com/sportelemzes/sportelemzes.github.io/issues" target="_blank" rel="noopener">
+        GitHub Issues
+      </a>.
+    </p>
+
+    <h2>7) Jogi nyilatkozat</h2>
+    <p>
+      Ez az oldal tájékoztató jellegű. Nem minősül jogi tanácsadásnak. Ha
+      jövőben bármilyen külső szolgáltatást (pl. analitika) bekötünk, ezt az
+      oldalt frissítjük.
+    </p>
+
+    <p class="muted" style="margin-top:20px">
+      Utolsó frissítés: <span id="d"></span>
+    </p>
+  </section>
+</main>
+
+<footer class="muted" style="text-align:center;padding:24px 0">
+  <div class="links">
+    <a href="/">Elemzések</a>
+    <a href="/stats.html">Statisztika</a>
+    <a href="/privacy.html">Adatkezelés</a>
+  </div>
+  <div>© <span id="y"></span> SportElemzés • GitHub Pages</div>
+</footer>
+
+<script>
+  // dátum + év a láblécben
+  document.getElementById('y').textContent = new Date().getFullYear();
+  document.getElementById('d').textContent =
+    new Date().toLocaleDateString('hu-HU', { year:'numeric', month:'2-digit', day:'2-digit' });
+</script>
+</body>
+</html>
