@@ -1,82 +1,37 @@
-<!doctype html>
-<html lang="hu">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Newcastle vs Liverpool – elemzés és tipp</title>
-  <link rel="icon" href="/assets/favicon.ico">
-  <link rel="stylesheet" href="/assets/style.css?v=4">
-</head>
-<body>
+<!-- FŐ TIPP -->
+<section class="pick-card" 
+         id="pick-main"
+         data-event-id="NEW-LIV"
+         data-market="ah_0"        <!-- lehet: h2h | totals_2.5 | ah_0 / asian_0 / dnb -->
+         data-selection="away">    <!-- home | away | over | under -->
+  <header>Fő tipp</header>
+  <h3>Liverpool DNB (Asian 0.0)</h3>
 
-  <!-- Ugyanaz a hero + menü, mint a főoldalon -->
-  <header class="header-hero">
-    <nav class="hero-nav">
-      <a class="brand" href="/">⚽ <span>SportElemzés</span></a>
-      <div class="links">
-        <a href="/">Elemzések</a>
-        <a href="/stats.html">Statisztika</a>
-      </div>
-    </nav>
+  <div class="meta">
+    <span class="odds"><span class="label">Odds:</span><span class="odds-value">1.55–1.65</span></span>
+    <span class="stake">Javasolt tét: 1u</span>
+  </div>
 
-    <div class="hero-inner">
-      <h1>Newcastle vs Liverpool – elemzés és tipp</h1>
-      <p>Premier League • 2025-08-25</p>
-    </div>
-  </header>
+  <p>Indoklás: a vendégek átmenetei és rögzített szituációi egyenletesebben hoznak
+     minőségi helyzeteket. A DNB védi a döntetlent (tét vissza), így konzervatív, de értelmes választás.</p>
 
-  <main class="container" style="max-width:900px;margin:0 auto;padding:20px;">
-    <article class="post-card" style="background:#121212;">
-      <p class="meta" style="margin:0 0 8px;color:#9aa0a6;">2025-08-25 • EPL</p>
+  <div class="note">Megjegyzés: az itt látható oddsot a rendszer frissíti a <code>data/picks.json</code>
+     alapján, hogy egyezzen a statisztikában könyvelt értékkel.</div>
+</section>
 
-      <h2 style="margin-top:0">Összefoglaló</h2>
-      <p>
-        A címvédő Liverpool támadásban továbbra is magas minőségű átmeneteket hoz, míg a Newcastle-nél a centerhelyzet
-        (Isak hiánya/rotáció) bizonytalanságot okozhat a befejezésekben. A piacok is inkább a vendégek felé húznak.
-      </p>
+<!-- ALTERNATÍVA -->
+<section class="pick-card alt"
+         id="pick-alt"
+         data-event-id="NEW-LIV"
+         data-market="totals_2.5"
+         data-selection="over">
+  <header>Alternatíva</header>
+  <h3>Liverpool csapattgólok Over 1.5</h3>
 
-      <h3>Taktikai fókusz</h3>
-      <ul>
-        <li><strong>Magas pressz vs build-up:</strong> Newcastle letámad, de a Pool átmenetei (Salah + belső 8-asok) könnyen üthetnek térben.</li>
-        <li><strong>Rögzített helyzetek:</strong> Van Dijk jelenléte miatt a Liverpool szögletei veszélyesek.</li>
-        <li><strong>Mentális faktor:</strong> a hazaiak csatárkérdése némi zavar, a vendégek oldalán nagyobb stabilitás.</li>
-      </ul>
+  <div class="meta">
+    <span class="odds"><span class="label">Odds:</span><span class="odds-value">1.65–1.80</span></span>
+    <span class="stake">Javasolt tét: 0.5–1u</span>
+  </div>
 
-      <h3>Mit mutatnak az árak?</h3>
-      <p>
-        A legtöbb könyvnél a Liverpool az enyhe favorit (DNB/Asian 0.0 ~1.55–1.65; Over 2.5 erős favorit).
-        Ezek a sávok a várható gólkülönbséget és a játék képét is alátámasztják.
-      </p>
-
-      <div class="post-card" style="margin-top:14px;border:1px dashed #333;background:#101010">
-        <h3 style="margin-top:0">Fő tipp</h3>
-        <p><strong>Liverpool DNB (Asian 0.0)</strong> • <em>odds-sáv: ~1.55–1.65</em></p>
-        <p style="margin:6px 0 0">Indoklás: a vendégek átmenetei és rögzített szituációi egyenletesebben hoznak minőségi helyzeteket.
-        A DNB védi a döntetlent (tét vissza), így konzervatív, de értelmes választás.</p>
-      </div>
-
-      <div class="post-card" style="margin-top:12px;border:1px dashed #333;background:#101010">
-        <h3 style="margin-top:0">Alternatíva</h3>
-        <p><strong>Liverpool csapatgólok Over 1.5</strong> • <em>odds-sáv: ~1.65–1.80</em></p>
-        <p style="margin:6px 0 0">Indoklás: gólgazdag meccskép, a Pool befejezései 90 percre nézve 2 gól környékét valószínűsítik.</p>
-      </div>
-
-      <p class="muted" style="margin-top:16px">
-        Tétkezelés javaslat: 1–1.5 u a fő tippre, 0.5–1 u az alternatívára (1 u = roll 1–2%).<br>
-        Felelős játék: mindig csak akkora tétet vállalj, amekkorát megengedhetsz magadnak.
-      </p>
-    </article>
-  </main>
-
-  <script>
-    // Aktív menü kiemelése
-    (function () {
-      const path = location.pathname.replace(/\/$/, '') || '/';
-      document.querySelectorAll('.hero-nav .links a').forEach(a => {
-        const href = a.getAttribute('href').replace(/\/$/, '') || '/';
-        if (href === path) a.classList.add('active');
-      });
-    })();
-  </script>
-</body>
-</html>
+  <p>Indoklás: gólgazdag meccskép várható, a Pool befejezései 90 percre nézve 2 gól környékét valószínűsítik.</p>
+</section>
