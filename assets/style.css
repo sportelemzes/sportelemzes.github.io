@@ -197,3 +197,76 @@ footer a{color:#8ac}
 #tips td .win  { color:#92e07c; font-weight:700; }
 #tips td .lost { color:#ff8a8a; font-weight:700; }
 #tips td .void { color:#ddd;    font-weight:600; }
+/* === Tipp kártyák (elemzés oldal) ======================================= */
+.pick-card{
+  background:#0b0e13;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:16px 18px;
+  margin:18px 0;
+  box-shadow:0 10px 24px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.03);
+}
+.pick-card + .pick-card{ margin-top:12px; }
+
+.pick-card header{
+  display:inline-block;
+  font-weight:700;
+  letter-spacing:.08em;
+  font-size:.78rem;
+  text-transform:uppercase;
+  color:#a6e1ff;
+  background:linear-gradient(90deg,#0d2236,#0a1828);
+  border:1px solid rgba(102,204,255,.35);
+  padding:.28rem .6rem;
+  border-radius:999px;
+  margin-bottom:.55rem;
+}
+
+.pick-card h3{
+  margin:0 0 .35rem 0;
+  font-size:1.12rem;
+}
+
+.pick-card .meta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px 14px;
+  margin:.35rem 0 .25rem 0;
+  color:#9ab;
+}
+
+.pick-card .odds{
+  font-weight:800;
+  font-size:1.05rem;
+  padding:.28rem .6rem;
+  border-radius:.5rem;
+  line-height:1;
+  background:#0f251f;
+  color:#a8f0c6;
+  border:1px solid #1e7e5a;
+}
+.pick-card .odds .label{ opacity:.7; font-weight:600; margin-right:.35rem; }
+
+.pick-card .stake{
+  padding:.25rem .55rem;
+  border-radius:.5rem;
+  background:#1b2130;
+  border:1px solid rgba(255,255,255,.07);
+}
+
+.pick-card.alt header{ color:#ffd88a; border-color:rgba(255,221,136,.35); background:linear-gradient(90deg,#2d230c,#201a09); }
+.pick-card.alt .odds{ background:#231d0b; color:#ffe9b6; border-color:#6a541e; }
+
+.pick-card .note{
+  margin-top:.6rem; 
+  border-top:1px dashed rgba(255,255,255,.08);
+  padding-top:.6rem;
+  color:#9aa6b2;
+}
+
+/* Mobil apró finomhangolás */
+@media (max-width:640px){
+  .pick-card h3{ font-size:1.02rem; }
+  .pick-card .meta{ gap:8px 10px; }
+}
