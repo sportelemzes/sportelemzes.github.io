@@ -1,5 +1,22 @@
 [
   {
+    "id": "STU-BODO-1756229825455",
+    "sport": "soccer_champions_league",
+    "league": "Premier League",
+    "eventId": "STU-BODO",
+    "eventName": "STU-BODO",
+    "market": "totals",
+    "selection": "over",
+    "line": 2.5,
+    "odds": 1.54,
+    "stake": 1000,
+    "commence_time": "2025-08-26T19:00:00.000Z",
+    "status": "open",
+    "result": "",
+    "profit": "",
+    "postSlug": "2025-08-26-STU-BODO"
+  },
+  {
     "id": "new-liv-2025-08-25",
     "sport": "soccer_epl",
     "league": "Premier League",
@@ -7,7 +24,7 @@
     "eventName": "Newcastle – Liverpool",
     "market": "asian_handicap",
     "selection": "away",
-    "line": 0.0,
+    "line": 0,
     "odds": 2.24,
     "stake": 1000,
     "commence_time": "2025-08-25T18:00:00Z",
