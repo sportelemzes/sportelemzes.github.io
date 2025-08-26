@@ -1,12 +1,95 @@
-<section class="pick-card"
-         data-event-id="NEW-LIV"
-         data-market="ah_0"        <!-- h2h | totals_2.5 | ah_0 -->
-         data-selection="away">    <!-- home | away | over | under -->
-  <header>Fő tipp</header>
-  <h3>Liverpool DNB (Asian 0.0)</h3>
-  <div class="meta">
-    <span class="odds"><span class="label">Odds:</span><span class="odds-value">1.55–1.65</span></span>
-    <span class="stake">Javasolt tét: 1u</span>
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Newcastle vs Liverpool – elemzés és tipp</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <script src="/assets/site.js" defer></script>
+</head>
+<body>
+
+<header class="header-hero">
+  <nav class="hero-nav">
+    <a class="brand" href="/"><span>SportElemzés</span></a>
+    <div class="links">
+      <a href="/">Elemzések</a>
+      <a href="/stats.html">Statisztika</a>
+    </div>
+  </nav>
+
+  <div class="hero-inner">
+    <h1>Newcastle vs Liverpool – elemzés és tipp</h1>
+    <p>Premier League • 2025-08-25</p>
   </div>
-  <p>Indoklás…</p>
-</section>
+</header>
+
+<main class="container" style="max-width:960px;margin:40px auto;padding:0 16px;">
+  <article class="post">
+
+    <p><strong>Összefoglaló</strong></p>
+    <p>
+      A címvédő Liverpool támadásban továbbra is magas minőségű átmeneteket hoz, míg a Newcastle-nél a centerhelyzet (és némi rotáció/hiányzó) bizonytalanságot okozhat a befejezéseknél.
+      A piacok is inkább a vendégek felé húznak.
+    </p>
+
+    <h2>Taktikai fókusz</h2>
+    <ul>
+      <li><strong>Magas pressz vs build-up:</strong> Newcastle letámad, a Pool átmenetei (Salah + belső 8-asok) könnyen üthetnek.</li>
+      <li><strong>Rögzített helyzetek:</strong> Van Dijk jelenléte miatt a Liverpool szögletei veszélyesek.</li>
+      <li><strong>Mentális faktor:</strong> a hazaiak csatárkérdése némi zavar, a vendégek oldalán nagyobb stabilitás.</li>
+    </ul>
+
+    <h2>Mit mutatnak az árak?</h2>
+    <p>
+      A legtöbb könyvnél a Liverpool az enyhe favorit; az árazás a vendégek stabilabb meccsképét tükrözi.
+    </p>
+
+    <!-- ======================= FŐ TIPP KÁRTYA ======================= -->
+    <section class="pick-card"
+             data-event-id="NEW-LIV"
+             data-market="ah_0"
+             data-selection="away">
+      <header>Fő tipp</header>
+      <h3>Liverpool DNB (Asian 0.0)</h3>
+
+      <div class="meta">
+        <span class="odds">
+          <span class="label">Odds:</span>
+          <span class="odds-value">1.55–1.65</span> <!-- ezt írja felül a /data/picks.json -->
+        </span>
+        <span class="stake">Javasolt tét: 1u</span>
+      </div>
+
+      <p>Indoklás: a vendégek átmenetei és rögzített szituációi egyenletesebben hoznak minőségi helyzeteket.
+         A DNB védi a döntetlent (tét vissza), így konzervatív, de értelmes választás.</p>
+    </section>
+    <!-- ============================================================= -->
+
+    <h2>Alternatíva</h2>
+    <p><strong>Liverpool csapattgólok Over 1.5</strong> – gólgazdag meccskép, a Pool befejezései 90 percre nézve 2 gól környékét valószínűsítik.</p>
+
+    <p style="opacity:.8;font-size:.95em">
+      Tétkezelés javaslat: 1–1.5 u a fő tipp; 0.5–1 u az alternatívára (1 u = roll 1–2%).<br/>
+      Felelős játék: mindig csak akkora tétet vállalj, amekkorát megengedhetsz magadnak.
+    </p>
+
+  </article>
+</main>
+
+<footer class="muted" style="text-align:center;padding:24px 0">
+  <div class="links">
+    <a href="/">Elemzések</a>
+    <a href="/stats.html">Statisztika</a>
+    <a href="/privacy.html">Adatkezelés</a>
+  </div>
+  <div>© <span id="y"></span> SportElemzés • <a href="https://pages.github.com/">GitHub Pages</a></div>
+</footer>
+
+<script>
+  // év a láblécben
+  document.getElementById('y').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
