@@ -1,153 +1,67 @@
 <!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SportElemzés – Statisztika</title>
-  <meta name="description" content="Havi P/L, tippek és eredmények">
-  <link rel="stylesheet" href="/assets/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Statisztika • SportElemzés</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <script src="/assets/site.js" defer></script>
 </head>
 <body>
 
-<header class="header-hero">
-  <nav class="hero-nav">
-    <a class="brand" href="/"><span>SportElemzés</span></a>
+  <!-- HERO / NAV -->
+  <header class="header-hero">
+    <nav class="hero-nav">
+      <a class="brand" href="/"><span>SportElemzés</span></a>
+      <div class="links">
+        <a href="/">Elemzések</a>
+        <a class="active" href="/stats.html">Statisztika</a>
+      </div>
+    </nav>
+
+    <div class="hero-inner">
+      <h1>Statisztika</h1>
+      <p>Havi P/L, tippek és eredmények</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Havi P/L és tippek</h2>
+
+      <h3>Havi profit/loss</h3>
+      <p class="muted">Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.</p>
+
+      <h3 style="margin-top:24px">Tippek</h3>
+
+      <div class="table-wrap">
+        <table id="tips">
+          <thead>
+            <tr>
+              <th>Dátum</th>
+              <th>Meccs</th>
+              <th>Piac</th>
+              <th>Tipp</th>
+              <th>Odds</th>
+              <th>Tét</th>
+              <th>Eredmény</th>
+              <th>Profit</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="muted" style="text-align:center;padding:24px 0">
     <div class="links">
       <a href="/">Elemzések</a>
       <a href="/stats.html">Statisztika</a>
-      <!-- Admin linket token alapján injektáljuk -->
+      <a href="/privacy.html">Adatkezelés</a>
     </div>
-  </nav>
+    <div style="margin-top:6px">© <span id="y"></span> SportElemzés • GitHub Pages</div>
+  </footer>
 
-  <div class="hero-inner">
-    <h1>Statisztika</h1>
-    <p>Havi P/L, tippek és eredmények</p>
-  </div>
-</header>
-
-<main>
-  <section>
-    <h2>Havi P/L és tippek</h2>
-
-    <h3>Havi profit/loss</h3>
-    <div id="pl-info" class="muted" style="margin-bottom:24px;">
-      Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.
-    </div>
-
-    <h3>Tippek</h3>
-    <div class="table-wrap">
-      <table class="table" id="tips">
-        <thead>
-        <tr>
-          <th>Dátum</th>
-          <th>Meccs</th>
-          <th>Piac</th>
-          <th>Tipp</th>
-          <th>Odds</th>
-          <th>Tét</th>
-          <th>Eredmény</th>
-          <th>Profit</th>
-        </tr>
-        </thead>
-        <tbody id="tips-body">
-          <tr><td colspan="8" class="muted">Betöltés…</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-</main>
-
-<footer class="muted" style="text-align:center;padding:24px 0">
-  © <span id="y"></span> SportElemzés ·
-  <a href="/">Elemzések</a> ·
-  <a href="/stats.html">Statisztika</a> ·
-  <a href="/privacy.html">Adatkezelés</a>
-</footer>
-
-<script>
-  const y = document.getElementById('y');
-  if (y) y.textContent = new Date().getFullYear(); // védelem, ha nincs ilyen elem
-</script>
-
-
-<script>
-// ------- Admin link injektálása csak token esetén -------
-(function () {
-  var hasToken = !!localStorage.getItem('gh_token');
-  if (!hasToken) return;
-  var links = document.querySelector('.hero-nav .links');
-  if (!links) return;
-  var a = document.createElement('a');
-  a.href = '/admin/';
-  a.textContent = 'Admin';
-  a.rel = 'nofollow';
-  links.appendChild(a);
-})();
-
-// ------- Tippek betöltése -------
-async function loadTips() {
-  const body = document.getElementById('tips-body');
-  const plInfo = document.getElementById('pl-info');
-
-  try {
-    const r = await fetch('/data/picks.json', { cache: 'no-store' });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const arr = await r.json();
-    if (!Array.isArray(arr) || !arr.length) {
-      body.innerHTML = '<tr><td colspan="8" class="muted">Nincs még rögzített tipp.</td></tr>';
-      return;
-    }
-
-    // táblázat
-    const fmtD = iso => new Date(iso).toLocaleString('hu-HU', {
-      year:'numeric', month:'2-digit', day:'2-digit'
-    });
-
-    let rows = '';
-    let closedExists = false;
-    let plByMonth = {};
-
-    arr.forEach(p => {
-      const res = p.result || '';
-      const profit = (typeof p.profit === 'number') ? p.profit : (res==='win' ? (p.odds-1)*p.stake : res==='loss' ? -p.stake : 0);
-      if (res === 'win' || res === 'loss') {
-        closedExists = true;
-        const d = new Date(p.commence_time || p.kickoff || p.date || Date.now());
-        const key = `${d.getFullYear()}-${('0'+(d.getMonth()+1)).slice(-2)}`;
-        plByMonth[key] = (plByMonth[key] || 0) + profit;
-      }
-
-      rows += `
-        <tr>
-          <td>${fmtD(p.commence_time || p.kickoff || p.date || Date.now())}</td>
-          <td>${p.eventId || p.match || ''}</td>
-          <td>${p.market || ''}</td>
-          <td>${p.selection || ''}${p.line ? ' ' + p.line : ''}</td>
-          <td>${(p.odds||'').toString()}</td>
-          <td>${(p.stake||'').toString()}</td>
-          <td>${p.status || p.result || 'open'}</td>
-          <td>${(Math.round(profit*100)/100).toFixed(2)}</td>
-        </tr>
-      `;
-    });
-
-    body.innerHTML = rows;
-
-    if (closedExists) {
-      const keys = Object.keys(plByMonth).sort();
-      const text = keys.map(k => `${k}: ${plByMonth[k].toFixed(2)} units`).join(' • ');
-      plInfo.textContent = text;
-    } else {
-      plInfo.textContent = 'Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.';
-    }
-
-  } catch (e) {
-    body.innerHTML = '<tr><td colspan="8" class="muted">Nem sikerült betölteni a tippeket.</td></tr>';
-    console.error(e);
-  }
-}
-loadTips();
-</script>
 </body>
 </html>
