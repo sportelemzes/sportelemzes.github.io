@@ -1,17 +1,5 @@
 [
   {
-    "id": "d0f07775",
-    "sport": "soccer_epl",
-    "eventId": "ARS-CHE",
-    "market": "totals",
-    "selection": "over",
-    "line": 2.5,
-    "odds": 1.90,
-    "stake": 1000,
-    "commence_time": "2025-08-31T18:00:00Z",
-    "status": "open"
-  },
-  {
     "id": "cc48d321",
     "sport": "soccer_epl",
     "eventId": "NEW-LIV",
