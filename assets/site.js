@@ -1,11 +1,10 @@
 /* assets/site.js
- * - Főoldal: friss elemzések listája
- * - Lábléc évszám (#y)
- * - Menü aktív link jelölése
+ * - Főoldal: friss elemzések listája (posts/index.json)
+ * - Dátumkezelés robusztus (YYYY-MM-DD, YYYY. MM. DD., stb.)
+ * - Lábléc év (#y) és aktív menü link jelölése
  */
 
-// Kicsi segédek
-const $ = sel => document.querySelector(sel);
+const $  = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 function safe(text) {
@@ -18,63 +17,76 @@ function safe(text) {
     .replaceAll("'", '&#39;');
 }
 
+/* ── Dátum parsolás ───────────────────────────────────────────────────── */
+
+function parseYMDtoUTC(s) {
+  // Fogad: "2025-08-26", "2025. 08. 26.", "2025 08 26", sőt "2025-08-26-slug"
+  const m = String(s).match(/(\d{4})[.\-\/\s]?(\d{2})[.\-\/\s]?(\d{2})/);
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return Date.UTC(y, mo - 1, d);
+}
+
+// Poszt időbélyeg (UTC milliszekundum) a rendezéshez
+function stampForPost(p) {
+  if (p.date) {
+    const t1 = parseYMDtoUTC(p.date);
+    if (t1 != null) return t1;
+    const t2 = Date.parse(p.date);          // ha ISO volt
+    if (!Number.isNaN(t2)) return t2;
+  }
+  if (p.slug) {
+    const t3 = parseYMDtoUTC(p.slug);
+    if (t3 != null) return t3;
+  }
+  return 0;
+}
+
+function prettyDateFromStamp(ts) {
+  if (!ts) return '';
+  try {
+    return new Date(ts).toLocaleDateString('hu-HU', {
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    });
+  } catch (_) { return ''; }
+}
+
+/* ── Főoldal feed ─────────────────────────────────────────────────────── */
+
 async function fetchJSON(url) {
   const r = await fetch(url, { cache: 'no-store' });
   if (!r.ok) throw new Error(`${url} → ${r.status}`);
   return r.json();
 }
 
-// dátum kinyerése (post.date vagy slug eleje: YYYY-MM-DD)
-function toDateFromPost(p) {
-  try {
-    if (p.date) return new Date(p.date);
-    if (p.slug) {
-      const parts = p.slug.split('-').slice(0, 3); // ["2025","08","26",...]
-      if (parts.length === 3) {
-        return new Date(parts.join('-'));
-      }
-    }
-  } catch (_) {}
-  return new Date(0); // fallback: nagyon régi
-}
-
-function prettyDate(d) {
-  try {
-    return d.toLocaleDateString('hu-HU', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  } catch (_) {
-    return '';
-  }
-}
-
-// FŐOLDAL – feed kirajzolása
 async function renderFeed() {
   const listEl = $('#list');
   if (!listEl) return; // nem a főoldal
 
-  // a lista elemet feed osztállyal érdemes ellátni a jobb térköz miatt (CSS)
-  if (!listEl.classList.contains('feed')) listEl.classList.add('feed');
+  listEl.classList.add('feed'); // térközökhöz (CSS)
 
   try {
     const posts = await fetchJSON('posts/index.json');
 
-    // Legújabb felül
-    posts.sort((a, b) => toDateFromPost(b) - toDateFromPost(a));
+    // Legújabb → legrégebbi
+    posts.sort((a, b) => {
+      const tb = stampForPost(b), ta = stampForPost(a);
+      if (tb !== ta) return tb - ta;
+      return String(b.slug || '').localeCompare(String(a.slug || ''));
+    });
 
     const html = posts.map(p => {
-      const d = toDateFromPost(p);
-      const when = prettyDate(d);
+      const ts   = stampForPost(p);
+      const when = prettyDateFromStamp(ts);
       const league = p.league || '';
-      const sport = p.sport || 'Foci';
+      const sport  = p.sport  || 'Foci';
       const excerpt = p.excerpt || '';
 
       return `
         <article class="card">
           <h3><a href="posts/${safe(p.slug)}.html">${safe(p.title || p.slug)}</a></h3>
-          <div class="meta">${safe(when)} • ${safe(league)} / ${safe(sport)}</div>
+          <div class="meta">${safe(when)} • ${safe(league)}${sport ? ' / '+safe(sport) : ''}</div>
           <p>${safe(excerpt)}</p>
           <p><a class="more" href="posts/${safe(p.slug)}.html">Tovább →</a></p>
         </article>
@@ -88,29 +100,24 @@ async function renderFeed() {
   }
 }
 
-// Menü aktív link jelölése
+/* ── UI apróságok ─────────────────────────────────────────────────────── */
+
 function markActiveNav() {
-  const path = location.pathname.replace(/\/+$/, ''); // trailing slash off
+  const path = location.pathname.replace(/\/+$/, '');
   const links = $$('#header .links a, header .links a, nav .links a, .links a');
   links.forEach(a => {
     const href = a.getAttribute('href') || '';
-    // relatív link összehasonlítás
     const resolved = new URL(href, location.origin).pathname.replace(/\/+$/, '');
-    if (resolved === path) {
-      a.classList.add('active');
-    } else {
-      a.classList.remove('active');
-    }
+    if (resolved === path) a.classList.add('active');
+    else a.classList.remove('active');
   });
 }
 
-// Lábléc évszám
 function setFooterYear() {
   const y = $('#y');
   if (y) y.textContent = new Date().getFullYear();
 }
 
-// DOM betöltés után futtatjuk
 document.addEventListener('DOMContentLoaded', () => {
   setFooterYear();
   markActiveNav();
