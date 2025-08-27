@@ -2,46 +2,25 @@
 <html lang="hu">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Statisztika</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Statisztika – SportElemzés</title>
   <link rel="stylesheet" href="/assets/style.css" />
   <style>
-    /* fejléccsúszás és igazítás javítás */
-    .table.fixed { table-layout: fixed; width: 100%; }
-    .table.fixed th, .table.fixed td { padding: 10px 12px; vertical-align: middle; }
-    .table.fixed thead th { font-weight: 700; color: #e6e6e6; }
-    .table.fixed td.num, .table.fixed th.num { text-align: right; }
-    .table.fixed td.center, .table.fixed th.center { text-align: center; }
-
-    /* a colgroup szélesség-kiosztása (desktop) */
-    @media (min-width: 900px) {
-      .c-date   { width: 12%; }
-      .c-match  { width: 32%; }
-      .c-market { width: 10%; }
-      .c-tip    { width: 10%; }
-      .c-odds   { width: 8%;  }
-      .c-stake  { width: 8%;  }
-      .c-res    { width: 10%; }
-      .c-prof   { width: 10%; }
-    }
-
-    /* kisebb kijelzőkön hagyjuk rugalmasra, hogy ne törjön */
-    @media (max-width: 899px) {
-      .table.fixed { table-layout: auto; }
-    }
-
-    /* kártya a grafikonhoz */
-    .chart-wrap {
-      margin: 24px 0 8px;
-      padding: 16px;
-      background: #111a;
-      border: 1px solid #222;
-      border-radius: 12px;
-    }
-    .chart-title { margin: 0 0 6px; font-weight: 700; }
-    #plChart { width: 100%; height: 280px; display: block; }
-    .muted-small { color:#aaa; font-size: .9rem; margin-top:6px }
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+    th{font-weight:700;color:#bcd}
+    tr:hover{background:rgba(255,255,255,.02)}
+    .won{color:#7CFFB3;font-weight:700}
+    .lost{color:#ff8a8a;font-weight:700}
+    .void{color:#d7d7d7;font-weight:700}
+    .open{color:#ffd27a;font-weight:700}
+    .nowrap{white-space:nowrap}
+    .muted{opacity:.8}
+    canvas{max-width:100%;height:360px}
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/assets/site.js" defer></script>
 </head>
 <body>
 <header class="header-hero">
@@ -54,55 +33,37 @@
   </nav>
   <div class="hero-inner">
     <h1>Statisztika</h1>
-    <p>Havi P/L, tippek és eredmények</p>
+    <p class="muted">Havi bontású profit és minden közzétett tipp listája.</p>
   </div>
 </header>
 
-<main>
+<main class="container">
   <section class="card">
-    <h2>Havi P/L és tippek</h2>
+    <h2>Havi profit</h2>
+    <canvas id="profitChart"></canvas>
+    <p class="muted" id="sumline"></p>
+  </section>
 
-    <!-- GRAFIKON -->
-    <div class="chart-wrap" id="chartBox" style="display:none">
-      <div class="chart-title">Havi profit/loss (oszlop) & kumulált P/L (vonal)</div>
-      <canvas id="plChart"></canvas>
-      <div class="muted-small">A grafikon csak a <b>lezárt</b> tippeket veszi figyelembe (ahol van számolt profit).</div>
-    </div>
-
-    <p class="muted" id="pl-note">
-      Még nincs lezárt tipp – a grafikon az első lezárás után jelenik meg.
-    </p>
-
-    <!-- TÁBLÁZAT -->
-    <div class="table-wrap">
-      <table class="table fixed" id="tips">
-        <colgroup>
-          <col class="c-date" />
-          <col class="c-match" />
-          <col class="c-market" />
-          <col class="c-tip" />
-          <col class="c-odds" />
-          <col class="c-stake" />
-          <col class="c-res" />
-          <col class="c-prof" />
-        </colgroup>
+  <section class="card">
+    <h2>Tippek</h2>
+    <div style="overflow-x:auto">
+      <table id="tbl">
         <thead>
-        <tr>
-          <th class="center">Dátum</th>
-          <th>Meccs</th>
-          <th class="center">Piac</th>
-          <th class="center">Tipp</th>
-          <th class="num">Odds</th>
-          <th class="num">Tét</th>
-          <th class="center">Eredmény</th>
-          <th class="num">Profit</th>
-        </tr>
+          <tr>
+            <th class="nowrap">Dátum</th>
+            <th>Meccs</th>
+            <th>Piac</th>
+            <th>Tipp</th>
+            <th class="nowrap">Odds</th>
+            <th class="nowrap">Tét</th>
+            <th>Eredmény</th>
+            <th class="nowrap">Profit</th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
-
-    <p class="muted" id="err" style="display:none;"></p>
+    <p class="muted" id="note"></p>
   </section>
 </main>
 
@@ -116,246 +77,139 @@
 </footer>
 
 <script>
-  // év a láblécben
-  document.getElementById('y').textContent = new Date().getFullYear();
-
-  const $ = (s) => document.querySelector(s);
-  const fmt = d => {
-    try {
-      return new Date(d).toLocaleDateString('hu-HU', { year:'numeric', month:'2-digit', day:'2-digit' });
-    } catch(e) { return d || ''; }
+(async function(){
+  const fmtDate = iso => {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('hu-HU', { year:'numeric', month:'2-digit', day:'2-digit' });
   };
 
-  // 3 betűs kód -> csapatnév (bővíthető)
-  const TEAM = {
-    ARS:'Arsenal', CHE:'Chelsea', NEW:'Newcastle', LIV:'Liverpool',
-    MCI:'Man City', MUN:'Man United', TOT:'Tottenham', WHU:'West Ham',
-    LEI:'Leicester', AVL:'Aston Villa', CRY:'Crystal Palace',
-    LEEDS:'Leeds', BRI:'Brighton', WOL:'Wolves', EVE:'Everton'
+  const fmtHuf = n => (Math.round(n).toLocaleString('hu-HU')) + ' Ft';
+
+  const marketPrint = (m, line) => {
+    m = (m||'').toLowerCase();
+    if (m === 'h2h' || m === 'moneyline') return 'H2H';
+    if (m === 'totals') return 'O/U ' + (line ?? '');
+    if (m.includes('asian') && typeof line !== 'undefined') {
+      const ln = (line*1).toFixed(Math.abs(line)%1 ? 2 : 1).replace(/\.0$/,'');
+      return 'AH ' + ln;
+    }
+    return m;
   };
 
-  function prettyMatch(eventId) {
-    if (!eventId) return '';
-    const p = (eventId + '').split('-').map(x => x.trim());
-    if (p.length !== 2) return eventId;
-    const home = TEAM[p[0]] || p[0];
-    const away = TEAM[p[1]] || p[1];
-    return `${home} – ${away}`;
+  const selectionPrint = (s) => {
+    s = (s||'').toLowerCase();
+    if (s === 'home') return 'home';
+    if (s === 'away') return 'away';
+    if (s === 'draw') return 'draw';
+    if (s === 'over') return 'over';
+    if (s === 'under') return 'under';
+    return s;
+  };
+
+  let rows = [];
+  try {
+    const r = await fetch('/data/picks.json?'+Date.now(), {cache:'no-store'});
+    rows = await r.json();
+  } catch (e) {
+    console.error(e);
+    $('#note').textContent = 'Nem sikerült betölteni a tippeket.';
+    return;
   }
 
-  function prettyMarket(p) {
-    const m = (p?.market || '').toLowerCase();
-    const line = p?.line ?? '';
-    if (m === 'h2h')       return 'h2h';
-    if (m === 'ah' || m === 'asian' || m === 'asian_handicap' || m === 'ah_0') {
-      const l = (line === '' || line === null || line === undefined) ? '0' : line;
-      return `AH ${l}`;
+  // Újabb elöl
+  rows.sort((a,b) => new Date(b.commence_time) - new Date(a.commence_time));
+
+  // Táblázat
+  const tbody = document.querySelector('#tbl tbody');
+  let totalProfit = 0, settledProfit = 0;
+
+  const trHtml = rows.map(p => {
+    // profit számítás (ha hiányzik)
+    let profit = 0;
+    if (typeof p.profit === 'number') {
+      profit = p.profit;
+    } else if (p.status === 'won') {
+      profit = (Number(p.odds) - 1) * Number(p.stake || 0);
+    } else if (p.status === 'lost') {
+      profit = -Number(p.stake || 0);
+    } else if (p.status === 'void') {
+      profit = 0;
+    } else {
+      profit = 0; // open
     }
-    if (m === 'totals' || m === 'ou' || m === 'over_under') {
-      return line !== '' ? `o/u ${line}` : 'o/u';
-    }
-    return p?.market || '';
-  }
 
-  function prettyTip(p) {
-    const m = (p?.market || '').toLowerCase();
-    const s = (p?.selection || '').toLowerCase();
-    const line = p?.line ?? '';
-    if (m === 'h2h') {
-      if (s === 'home' || s === 'away' || s === 'draw') return s;
-    }
-    if (m === 'ah' || m === 'asian' || m === 'asian_handicap' || m === 'ah_0') {
-      if (s === 'home' || s === 'away') return s;
-    }
-    if (m === 'totals' || m === 'ou' || m === 'over_under') {
-      if (s === 'over' || s === 'under') return s;
-      if (!s && (typeof line === 'number' || (typeof line === 'string' && line))) return 'over/under';
-    }
-    return s || '';
-  }
+    totalProfit += profit;
+    if (p.status !== 'open') settledProfit += profit;
 
-  function prettyResult(p) {
-    const st = (p?.status || '').toLowerCase();
-    if (st === 'open' || st === '') return 'open';
-    return st; // pl. won / lost / push / half_won / half_lost
-  }
+    const resClass = (p.status||'').toLowerCase();
+    const resText  = resClass || '';
 
-  function prettyProfit(p) {
-    if (typeof p?.profit === 'number') return p.profit.toFixed(2);
-    return '—';
-  }
+    return `
+      <tr>
+        <td class="nowrap">${fmtDate(p.commence_time)}</td>
+        <td>${safe(p.eventName || p.eventId || '')}</td>
+        <td>${safe(marketPrint(p.market, p.line))}</td>
+        <td>${safe(selectionPrint(p.selection))}</td>
+        <td class="nowrap">${Number(p.odds).toFixed(2)}</td>
+        <td class="nowrap">${(p.stake||0).toLocaleString('hu-HU')}</td>
+        <td class="${resClass}">${safe(resText)}</td>
+        <td class="nowrap ${profit>=0?'won':'lost'}">${fmtHuf(profit)}</td>
+      </tr>
+    `;
+  }).join('');
 
-  async function load() {
-    const $tbody = $('#tips tbody');
-    const $err   = $('#err');
-    const $note  = $('#pl-note');
-    const $chartBox = $('#chartBox');
-    const $canvas = $('#plChart');
+  tbody.innerHTML = trHtml || `<tr><td colspan="8" class="muted">Még nincs felvitt tipp.</td></tr>`;
+  $('#note').textContent = `Elszámolt profit (lezárt tételek): ${fmtHuf(settledProfit)} • Összesített (lezárt + nyitott 0-val): ${fmtHuf(totalProfit)}`;
 
-    try {
-      const res = await fetch('/data/picks.json', { cache:'no-store' });
-      const arr = await res.json();
+  // Havi bontás (lezárt tételek)
+  const byMonth = {};
+  rows.forEach(p => {
+    if ((p.status||'open') === 'open') return; // nyitottak nem számítanak a havi P/L-be
+    const d = new Date(p.commence_time);
+    if (isNaN(d)) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; // YYYY-MM
+    let profit = (typeof p.profit === 'number')
+      ? p.profit
+      : (p.status === 'won' ? (Number(p.odds)-1)*Number(p.stake||0) : p.status==='lost' ? -Number(p.stake||0) : 0);
+    byMonth[key] = (byMonth[key] || 0) + profit;
+  });
 
-      $tbody.innerHTML = '';
+  const labels = Object.keys(byMonth).sort();           // időrend
+  const data    = labels.map(k => byMonth[k]);
 
-      const tips = Array.isArray(arr) ? arr.slice() : [];
-      // időrend (legutóbbi felül)
-      tips.sort((a,b) => new Date(b.commence_time) - new Date(a.commence_time));
-
-      if (!tips.length) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 8;
-        td.className = 'muted';
-        td.textContent = 'Még nincs rögzített tipp.';
-        tr.appendChild(td);
-        $tbody.appendChild(tr);
-        return;
-      }
-
-      for (const p of tips) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="center">${fmt(p.commence_time)}</td>
-          <td>${prettyMatch(p.eventId)}</td>
-          <td class="center">${prettyMarket(p)}</td>
-          <td class="center">${prettyTip(p)}</td>
-          <td class="num">${(typeof p.odds === 'number' ? p.odds.toFixed(2) : (p.odds || ''))}</td>
-          <td class="num">${p.stake ?? ''}</td>
-          <td class="center">${prettyResult(p)}</td>
-          <td class="num">${prettyProfit(p)}</td>
-        `;
-        $tbody.appendChild(tr);
-      }
-
-      // ====== GRAFIKON (havi profit összeg + kumulált) ======
-      const closed = tips.filter(p => typeof p.profit === 'number'); // csak lezárt
-      if (closed.length) {
-        // hónap kulcs: YYYY-MM
-        const byMonth = new Map();
-        for (const p of closed) {
-          const d = new Date(p.commence_time);
-          const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-          byMonth.set(key, (byMonth.get(key) || 0) + p.profit);
+  // Grafikon
+  const ctx = document.getElementById('profitChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Havi profit (Ft)',
+        data
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      scales: {
+        y: { beginAtZero: true }
+      },
+      plugins: {
+        legend: { display: true },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${fmtHuf(c.parsed.y)}`
+          }
         }
-        const labels = Array.from(byMonth.keys()).sort();
-        const monthly = labels.map(k => byMonth.get(k));
-        const cumulative = [];
-        monthly.reduce((acc,v,i) => cumulative[i] = acc+v, 0);
-
-        drawPLChart($canvas, labels, monthly, cumulative);
-        $chartBox.style.display = '';
-        $note.style.display = 'none';
-      } else {
-        // nincs lezárt
-        $chartBox.style.display = 'none';
-        $note.style.display = '';
       }
-
-    } catch (e) {
-      console.error(e);
-      $err.style.display = '';
-      $err.textContent = 'Nem sikerült betölteni a tippeket. (' + (e?.message || e) + ')';
     }
-  }
+  });
 
-  function drawPLChart(canvas, labels, bars, line) {
-    // egyszerű, dependency-mentes canvas chart
-    const DPR = window.devicePixelRatio || 1;
-    const W = canvas.clientWidth || 700;
-    const H = canvas.clientHeight || 280;
-    canvas.width  = Math.floor(W * DPR);
-    canvas.height = Math.floor(H * DPR);
-    const ctx = canvas.getContext('2d');
-    ctx.scale(DPR, DPR);
-
-    // belső padding
-    const left = 48, right = 18, top = 14, bottom = 48;
-    const innerW = W - left - right;
-    const innerH = H - top - bottom;
-
-    // skála
-    const minY = Math.min(0, ...bars, ...line);
-    const maxY = Math.max(0, ...bars, ...line);
-    const range = maxY - minY || 1;
-    const niceStep = niceTick(range / 5);
-    const yMin = Math.floor(minY / niceStep) * niceStep;
-    const yMax = Math.ceil (maxY / niceStep) * niceStep;
-
-    function yToPix(v) {
-      return top + innerH * (1 - (v - yMin) / (yMax - yMin));
-    }
-    function xToPix(i) {
-      return left + innerW * (i + 0.5) / labels.length;
-    }
-
-    // háttér
-    ctx.fillStyle = '#0b0b0b';
-    ctx.fillRect(0, 0, W, H);
-
-    // rácsvonalak + y tengelyértékek
-    ctx.strokeStyle = '#222';
-    ctx.fillStyle = '#aaa';
-    ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-
-    for (let v = yMin; v <= yMax + 1e-9; v += niceStep) {
-      const y = yToPix(v);
-      ctx.beginPath();
-      ctx.moveTo(left, y);
-      ctx.lineTo(W - right, y);
-      ctx.stroke();
-      ctx.fillText(v.toFixed(0), left - 6, y);
-    }
-
-    // oszlopok
-    const barW = Math.max(12, innerW / labels.length * 0.5);
-    ctx.fillStyle = '#2a7bffcc';
-    for (let i = 0; i < labels.length; i++) {
-      const x = xToPix(i);
-      const y0 = yToPix(0);
-      const y1 = yToPix(bars[i]);
-      ctx.fillRect(x - barW/2, Math.min(y0,y1), barW, Math.abs(y1 - y0));
-    }
-
-    // kumulált vonal
-    ctx.strokeStyle = '#ffcf40';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i < labels.length; i++) {
-      const x = xToPix(i);
-      const y = yToPix(line[i]);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-
-    // x címkék
-    ctx.fillStyle = '#aaa';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    for (let i = 0; i < labels.length; i++) {
-      const x = xToPix(i);
-      const y = H - bottom + 6;
-      const lab = labels[i].replace('-', '. ');
-      ctx.fillText(lab, x, y);
-    }
-  }
-
-  // „szép” beosztás lépcső
-  function niceTick(x){
-    const pow10 = Math.pow(10, Math.floor(Math.log10(Math.abs(x)||1)));
-    const n = x / pow10;
-    let step;
-    if (n <= 1) step = 1;
-    else if (n <= 2) step = 2;
-    else if (n <= 5) step = 5;
-    else step = 10;
-    return step * pow10;
-  }
-
-  load();
+  // Összegző sor
+  const sum = data.reduce((a,b)=>a+b,0);
+  document.getElementById('sumline').textContent = `Összesített havi profit: ${fmtHuf(sum)} (csak lezárt tételek).`;
+})();
 </script>
 </body>
 </html>
