@@ -1,313 +1,190 @@
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#0b0b0b;color:#e6e6e6}
-a{color:#0a66c2;text-decoration:none}
-a:hover{text-decoration:underline}
-.muted{color:#9aa}
+/* =========================================================
+   SportElemzés – Global styles (assets/style.css)
+   ========================================================= */
 
-header{margin:0;border-bottom:1px solid #222}
-.header-hero{position:relative;background-image:url("/assets/head.webp");height:260px;background-size:cover;background-position:center;color:#fff}
-.hero-nav{display:flex;gap:12px;align-items:center;padding:16px 18px}
-.hero-nav .brand{font-weight:700}
-.hero-nav .links a{margin-left:10px}
-.hero-nav a.active{font-weight:700}
-.hero-inner{position:relative;margin:0 auto;max-width:1100px;padding: clamp(16px,3vw,28px);}
-.hero-inner h1{margin:0 0 8px}
-.hero-inner p{margin:0;color:#d8d8d8}
-
-/* ---- fő elrendezés ---- */
-main{
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: clamp(16px, 3.5vw, 36px);   /* nagyobb belső margó bal/jobb */
-  display: grid;
-  gap: 20px;
+:root{
+  --bg: #0b0d11;
+  --panel: #12141a;
+  --panel-2: #0e1015;
+  --text: #e8eef7;
+  --muted: #a6b1c2;
+  --dim: rgba(255,255,255,.08);
+  --brand: #00e5a8;
+  --brand-2: #36f5be;
+  --link: #8ec5ff;
 }
 
-/* kártyák */
-.card{
-  background:#101010;
-  border:1px solid #2a2a2a;
-  border-radius:12px;
-  padding: clamp(14px, 2.6vw, 22px);
-}
-.post-card h3{ margin:0 0 6px; }
+*{ box-sizing:border-box; }
 
-/* táblázatok, egyéb */
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #222}
-th{color:#cdd}
-footer a{color:#8ac}
-
-/* ===== NAV + HERO KONTRASZT TUNING ===== */
-
-/* Sötét overlay a hero képre, hogy jobban olvasható legyen minden */
-.header-hero {
-  position: relative;
-  z-index: 0;
-}
-.header-hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0,0,0,.65) 0%,
-    rgba(0,0,0,.45) 40%,
-    rgba(0,0,0,.70) 100%
-  );
-  pointer-events: none;
-  z-index: 0;
+html,body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial;
 }
 
-/* A navigáció a kép fölött legyen */
-.header-hero .hero-inner,
-.header-hero nav.hero-nav {
-  position: relative;
-  z-index: 2;
+/* Links */
+a{ color:var(--link); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+/* Utilities */
+.muted{ color:var(--muted); }
+.container{ max-width:1100px; margin:0 auto; padding:20px 16px; }
+
+/* ---------------------------------------------------------
+   HEADER (hero + nav)
+   --------------------------------------------------------- */
+.header-hero{
+  position:relative;
+  color:#fff;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.75), rgba(0,0,0,.25) 30%, rgba(0,0,0,.85)),
+    url('/assets/head.webp') center / cover no-repeat;
 }
 
-/* Menüsor – nagyobb, láthatóbb, „pill” háttér */
-.hero-nav {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  padding: 10px 16px;
-  border-radius: 18px;
-  background: rgba(0, 0, 0, .25);          /* finom áttetsző sáv a menü mögé */
-  backdrop-filter: blur(4px);               /* kis „glass” hatás */
-}
-
-/* Logó / márkanév – látványosabb */
-.hero-nav .brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  font-size: 22px;
-  color: #eef6ff;
-  text-shadow: 0 2px 10px rgba(0,0,0,.8);
-  padding: 6px 12px;
-  border-radius: 14px;
-  background: rgba(0,0,0,.35);
-  border: 1px solid rgba(255,255,255,.08);
-}
-
-/* Menü linkek – nagyobb betű, erősebb kontraszt */
-.hero-nav .links a,
-.hero-nav a {
-  font-weight: 700;
-  font-size: 18px;                          /* <— nagyobb */
-  letter-spacing: .2px;
-  color: #d8e9ff;                           /* halvány világoskék */
-  text-decoration: none;
-  text-shadow: 0 2px 8px rgba(0,0,0,.8);
-  padding: 8px 14px;
-  border-radius: 12px;
-  transition: color .2s ease, background .2s ease, transform .08s ease;
-}
-
-/* Hover/aktív állapot – erősebb fény és kis háttér-pill */
-.hero-nav .links a:hover,
-.hero-nav .links a.active,
-.hero-nav a:hover,
-.hero-nav a.active {
-  color: #ffffff;
-  background: rgba(255,255,255,.16);
-}
-
-/* Kis „tap” visszajelzés */
-.hero-nav .links a:active {
-  transform: translateY(1px);
-}
-
-/* Mobilon is legyen olvasható */
-@media (max-width: 820px) {
-  .hero-nav {
-    gap: 14px;
-    padding: 8px 12px;
-  }
-  .hero-nav .brand {
-    font-size: 18px;
-    padding: 4px 10px;
-  }
-  .hero-nav .links a,
-  .hero-nav a {
-    font-size: 16px;
-    padding: 6px 10px;
-  }
-}
-/* --- HERO NAV (menü) erősebb vizuál + active állapot --- */
-.hero-nav a {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-weight: 800;
-  letter-spacing: .2px;
-  color: #dff1ff;
-  background: rgba(10, 23, 35, .45);
-  border: 1px solid rgba(110, 185, 255, .2);
-  text-decoration: none;
-  transition: .2s ease;
+/* top navigation */
+.hero-nav{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:12px 16px;
+  background:rgba(0,0,0,.35);
+  border-bottom:1px solid var(--dim);
   backdrop-filter: blur(6px);
 }
 
-.hero-nav a:hover {
-  color: #001321;
-  background: #25c2ff;
-  border-color: #25c2ff;
-  box-shadow: 0 4px 14px rgba(37, 194, 255, .35);
-}
-
-.hero-nav a.active,
-.hero-nav a[aria-current="page"] {
-  color: #001321;
-  background: #1ee2b7;            /* aktív: türkiz */
-  border-color: #1ee2b7;
-  box-shadow: 0 6px 20px rgba(30, 226, 183, .35);
-}
-
-/* --- Tipp “kártyák” (Fő tipp / Alternatíva) --- */
-.tip-card {
-  margin: 1.25rem 0;
-  padding: 1rem 1.25rem;
-  border: 1px solid #2dd4bf;
-  background: rgba(45, 212, 191, .07);
-  border-radius: 14px;
-}
-.tip-card .title {
-  font-size: .94rem;
-  text-transform: uppercase;
-  font-weight: 900;
-  letter-spacing: .6px;
-  color: #2dd4bf;
-  margin-bottom: .35rem;
-}
-
-/* csak a FŐ tipp legyen még kontrasztosabb */
-.tip-card.main {
-  border-color: #22d3ee;
-  background: rgba(34, 211, 238, .09);
-}
-.tip-card.main .title {
-  color: #22d3ee;
-}
-/* profit színezés a statisztikán */
-#tips td .win  { color:#92e07c; font-weight:700; }
-#tips td .lost { color:#ff8a8a; font-weight:700; }
-#tips td .void { color:#ddd;    font-weight:600; }
-/* === Tipp kártyák (elemzés oldal) ======================================= */
-.pick-card{
-  background:#0b0e13;
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:16px;
-  padding:16px 18px;
-  margin:18px 0;
-  box-shadow:0 10px 24px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.03);
-}
-.pick-card + .pick-card{ margin-top:12px; }
-
-.pick-card header{
-  display:inline-block;
-  font-weight:700;
-  letter-spacing:.08em;
-  font-size:.78rem;
-  text-transform:uppercase;
-  color:#a6e1ff;
-  background:linear-gradient(90deg,#0d2236,#0a1828);
-  border:1px solid rgba(102,204,255,.35);
-  padding:.28rem .6rem;
-  border-radius:999px;
-  margin-bottom:.55rem;
-}
-
-.pick-card h3{
-  margin:0 0 .35rem 0;
-  font-size:1.12rem;
-}
-
-.pick-card .meta{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:10px 14px;
-  margin:.35rem 0 .25rem 0;
-  color:#9ab;
-}
-
-.pick-card .odds{
-  font-weight:800;
+.brand{
+  display:inline-flex; align-items:center; gap:10px;
+  font-weight:800; letter-spacing:.2px;
   font-size:1.05rem;
-  padding:.28rem .6rem;
-  border-radius:.5rem;
-  line-height:1;
-  background:#0f251f;
-  color:#a8f0c6;
-  border:1px solid #1e7e5a;
 }
-.pick-card .odds .label{ opacity:.7; font-weight:600; margin-right:.35rem; }
-
-.pick-card .stake{
-  padding:.25rem .55rem;
-  border-radius:.5rem;
-  background:#1b2130;
-  border:1px solid rgba(255,255,255,.07);
+.brand span{
+  background: linear-gradient(90deg, #bde3ff, #fff);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
 }
 
-.pick-card.alt header{ color:#ffd88a; border-color:rgba(255,221,136,.35); background:linear-gradient(90deg,#2d230c,#201a09); }
-.pick-card.alt .odds{ background:#231d0b; color:#ffe9b6; border-color:#6a541e; }
-
-.pick-card .note{
-  margin-top:.6rem; 
-  border-top:1px dashed rgba(255,255,255,.08);
-  padding-top:.6rem;
-  color:#9aa6b2;
+.hero-nav .links{ display:flex; gap:16px; flex-wrap:wrap; }
+.hero-nav .links a{
+  color:#cfe3ff;
+  font-weight:700;
+  font-size:1.02rem;
+  padding:6px 8px;
+  border-radius:8px;
+  border:1px solid transparent;
+}
+.hero-nav .links a:hover{
+  text-decoration:none;
+  border-color:rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+}
+.hero-nav .links a.active{
+  color:#ffffff;
+  border-color:rgba(0,229,168,.45);
+  background:rgba(0,229,168,.12);
 }
 
-/* Mobil apró finomhangolás */
-@media (max-width:640px){
-  .pick-card h3{ font-size:1.02rem; }
-  .pick-card .meta{ gap:8px 10px; }
+/* hero inner */
+.hero-inner{
+  text-align:center;
+  padding:64px 16px 48px;
 }
-/* --- Feed (főoldal) kártyák és térköz --- */
-#list.feed {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;                 /* EZ adja a dobozok közti távolságot */
+.hero-inner h1{
+  margin:0 0 6px;
+  font-size: clamp(1.35rem, 2.6vw, 2rem);
+  font-weight:900;
+}
+.hero-inner p{ margin:0; color:#cbd6e7; }
+
+/* ---------------------------------------------------------
+   CARDS, FEED (főoldal kártyák)
+   --------------------------------------------------------- */
+.card{
+  background: var(--panel);
+  border:1px solid var(--dim);
+  border-radius:14px;
+  padding:18px 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
 
-.card {
+/* kártyák közti tér – a feed listához */
+.feed .card{
+  margin: 0 0 28px;           /* ← EZ adja a távolságot a dobozok között */
   background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 12px;
-  padding: 20px 22px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 10px 24px rgba(0,0,0,.22);
+}
+.feed .card .title{ margin:0 0 6px; font-size:1.15rem; }
+.feed .card .muted{ margin:0 0 10px; font-size:.95rem; color:rgba(255,255,255,.7); }
+.feed .card .more{ color:#9ccbff; font-weight:600; }
+
+/* ---------------------------------------------------------
+   TIP/ODDS kiemelő doboz (poszt oldalakon)
+   --------------------------------------------------------- */
+.tipbox, .tip-callout{
+  margin:16px 0;
+  padding:14px 16px;
+  border-radius:12px;
+  border:1px solid rgba(0,229,168,.35);
+  background: linear-gradient(180deg, rgba(0,229,168,.10), rgba(0,229,168,.03));
+}
+.tipbox strong, .tip-callout strong{
+  color:#eafff8;
+}
+.oddshere{
+  font-weight:800;
+  padding:2px 6px;
+  border-radius:8px;
+  background:rgba(0,229,168,.18);
+  border:1px solid rgba(0,229,168,.35);
 }
 
-.card h3 {
-  margin: 0 0 8px;
-  line-height: 1.3;
+/* ---------------------------------------------------------
+   TABLES (általános – a stats.html külön is finomhangol)
+   --------------------------------------------------------- */
+table{ width:100%; border-collapse:collapse; }
+th, td{ padding:10px 12px; border-bottom:1px solid var(--dim); text-align:left; }
+th{ color:#cfe3ff; font-weight:700; }
+tr:hover{ background: rgba(255,255,255,.02); }
+.nowrap{ white-space:nowrap; }
+
+.won  { color:#7CFFB3; font-weight:700; }
+.lost { color:#ff8a8a; font-weight:700; }
+.void { color:#d7d7d7; font-weight:700; }
+.open { color:#ffd27a; font-weight:700; }
+
+/* ---------------------------------------------------------
+   FOOTER
+   --------------------------------------------------------- */
+footer{
+  border-top:1px solid var(--dim);
+  background: var(--panel-2);
 }
-
-.card h3 a {
-  color: #d6e3ff;
-  text-decoration: none;
+footer .links{
+  display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:10px;
 }
+footer .links a{ color:#cfe3ff; }
+footer .links a:hover{ color:#fff; }
 
-.card h3 a:hover { text-decoration: underline; }
-
-.card .meta {
-  margin-bottom: 8px;
-  color: #9aa5b5;
-  font-size: .92rem;
+/* ---------------------------------------------------------
+   MISC
+   --------------------------------------------------------- */
+hr{ border:none; border-top:1px solid var(--dim); margin:18px 0; }
+blockquote{
+  margin:12px 0; padding:10px 14px; border-left:3px solid var(--brand);
+  background: rgba(255,255,255,.03); border-radius:6px;
 }
-
-.card p { margin: 0 0 6px; }
-
-.card .more {
-  display: inline-block;
-  margin-top: 6px;
-  color: #9ccbff;
-  text-decoration: none;
+code, pre{
+  font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  background: #0c0f14; color:#e9f1ff; border:1px solid var(--dim);
+  border-radius:8px; padding:.15em .35em;
 }
-.card .more:hover { text-decoration: underline; }
+pre{ padding:10px 12px; overflow:auto; }
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------- */
+@media (max-width: 720px){
+  .hero-nav{ flex-wrap:wrap; gap:10px; }
+  .hero-nav .links{ gap:10px; }
+  .hero-nav .links a{ font-size:1rem; padding:6px 8px; }
+  .container{ padding:18px 12px; }
+  .card{ padding:16px; }
+  .feed .card{ margin-bottom:24px; }
+}
